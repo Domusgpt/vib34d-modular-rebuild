@@ -317,8 +317,14 @@ export class Choreographer {
         this.audioElement = new Audio(url);
         this.audioElement.crossOrigin = 'anonymous';
 
+        // Connect audio to Web Audio API for analysis
+        const source = this.audioContext.createMediaElementSource(this.audioElement);
+        source.connect(this.analyser);
+        this.analyser.connect(this.audioContext.destination);
+
+        // Start audio analysis loop
         if (this.audioAnalyzer) {
-            this.audioAnalyzer.connectAudio(this.audioElement);
+            this.audioAnalyzer.startAnalysisLoop();
         }
 
         this.audioElement.addEventListener('loadedmetadata', () => {
