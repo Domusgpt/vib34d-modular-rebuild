@@ -6,6 +6,9 @@
 
 import { RecordingEngine } from './RecordingEngine.js';
 import { AudioAnalyzer } from './AudioAnalyzer.js';
+import { PerformanceMonitor } from './PerformanceMonitor.js';
+import { PresetManager } from './PresetManager.js';
+import { KeyboardController } from './KeyboardController.js';
 import { applyChoreographyMode } from '../choreography/ChoreographyModes.js';
 import { applyParameterSweeps } from '../choreography/ParameterSweeps.js';
 import { applyColorPalette } from '../choreography/ColorPalettes.js';
@@ -71,13 +74,26 @@ export class Choreographer {
         this.recordingEngine = null;
         this.audioAnalyzer = null;
         this.sequenceMonitorInterval = null;
+
+        // Enhanced systems
+        this.performanceMonitor = null;
+        this.presetManager = null;
+        this.keyboardController = null;
     }
 
     async init() {
         console.log('🎬 Initializing Choreographer...');
 
+        // Initialize enhanced systems
+        this.performanceMonitor = new PerformanceMonitor();
+        this.presetManager = new PresetManager(this);
+        this.keyboardController = new KeyboardController(this);
+
         await this.initCanvases();
         await this.initCurrentSystem();
+
+        // Start performance monitoring
+        this.performanceMonitor.start();
         this.setupAudio();
         this.setupUI();
 
