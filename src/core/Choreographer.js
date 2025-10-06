@@ -195,7 +195,11 @@ export class Choreographer {
 
         console.log(`🔄 Switching from ${this.currentSystem} to ${systemName}`);
 
-        await this.destroySystem(this.currentSystem);
+        // CRITICAL: Use CanvasLayerManager's smart switching
+        // This properly cleans up WebGL contexts and prevents memory leaks
+        const oldSystem = this.currentSystem;
+
+        await this.destroySystem(oldSystem);
         this.currentSystem = systemName;
         await this.createSystem(systemName);
 
@@ -204,7 +208,7 @@ export class Choreographer {
             pill.classList.toggle('active', pill.dataset.system === systemName);
         });
 
-        console.log(`✅ Switched to ${systemName}`);
+        console.log(`✅ Switched from ${oldSystem} to ${systemName} with proper layer cleanup`);
     }
 
     async destroySystem(systemName) {
