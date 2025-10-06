@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIB34D Music Choreographer - Modular Build</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0ff;
+            overflow: hidden;
+        }
+
+        #stage-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 1;
+        }
+
+        #control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 80vh;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #0ff;
+            padding: 15px;
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        #control-panel h2 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #0ff;
+            text-align: center;
+            border-bottom: 1px solid #0ff;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            color: #0ff;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 5px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #0ff;
+            color: #0ff;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #0ff;
+            color: #0ff;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 5px;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .system-pills {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .system-pill {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #0ff;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .system-pill:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .system-pill.active {
+            background: #0ff;
+            color: #000;
+            font-weight: bold;
+        }
+
+        #status-display {
+            font-size: 9px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .status-line {
+            margin-bottom: 3px;
+            opacity: 0.8;
+        }
+
+        .status-line.success {
+            color: #0f0;
+        }
+
+        .status-line.error {
+            color: #f00;
+        }
+
+        .status-line.info {
+            color: #0ff;
+        }
+
+        #loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #0ff;
+            padding: 30px;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        #loading-indicator.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 255, 255, 0.3);
+            border-top-color: #0ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #mode-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0ff;
+            padding: 15px;
+            z-index: 100;
+            min-width: 250px;
+        }
+
+        #mode-display h3 {
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #0ff;
+        }
+
+        #mode-display .mode-value {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        #mode-display .mode-details {
+            font-size: 10px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .build-info {
+            font-size: 8px;
+            opacity: 0.5;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-indicator">
+        <div class="spinner"></div>
+        <div>INITIALIZING VIB34D CHOREOGRAPHER...</div>
+        <div style="font-size: 10px; margin-top: 10px; opacity: 0.7;">Modular Build v2.0</div>
+    </div>
+
+    <div id="stage-container">
+        <!-- Canvas container - dynamically created per system -->
+    </div>
+
+    <div id="mode-display">
+        <h3>🎭 CHOREOGRAPHY STATUS</h3>
+        <div class="mode-value" id="current-mode">IDLE</div>
+        <div class="mode-details">
+            <div>System: <span id="current-system">-</span></div>
+            <div>Audio: <span id="audio-status">No file loaded</span></div>
+            <div>Sequences: <span id="sequence-count">0</span></div>
+        </div>
+    </div>
+
+    <div id="control-panel">
+        <h2>🎬 CHOREOGRAPHER CONTROL</h2>
+
+        <div class="control-group">
+            <label>📁 LOAD AUDIO FILE</label>
+            <input type="file" id="audio-file-input" accept="audio/*">
+        </div>
+
+        <div class="control-group">
+            <label>🎮 PLAYBACK CONTROLS</label>
+            <button id="play-btn" disabled>▶ PLAY</button>
+            <button id="pause-btn" disabled>⏸ PAUSE</button>
+            <button id="stop-btn" disabled>⏹ STOP</button>
+        </div>
+
+        <div class="control-group">
+            <label>🌐 VISUALIZATION SYSTEM</label>
+            <div class="system-pills">
+                <div class="system-pill active" data-system="faceted">FACETED</div>
+                <div class="system-pill" data-system="quantum">QUANTUM</div>
+                <div class="system-pill" data-system="holographic">HOLO</div>
+            </div>
+            <div style="font-size: 8px; opacity: 0.6; margin-top: 5px;">
+                ⚠️ Visualization engines not yet integrated
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>🤖 AI CHOREOGRAPHY</label>
+            <input type="password" id="gemini-api-key" placeholder="Gemini API Key..."
+                   style="width: 100%; padding: 5px; margin-bottom: 5px; background: rgba(0,255,255,0.1); border: 1px solid #0ff; color: #0ff; font-size: 10px;">
+            <button id="analyze-btn" disabled>🎵 ANALYZE SONG</button>
+        </div>
+
+        <div class="control-group">
+            <label>🎥 VIDEO EXPORT</label>
+            <button id="export-video-btn" disabled>💾 EXPORT VIDEO</button>
+            <button id="manual-record-btn" disabled>⏺ MANUAL RECORD</button>
+        </div>
+
+        <div class="control-group">
+            <label>📊 STATUS LOG</label>
+            <div id="status-display">
+                <div class="status-line info">Choreographer initialized</div>
+                <div class="status-line info">Waiting for audio file...</div>
+            </div>
+        </div>
+
+        <div class="build-info">
+            VIB34D Modular Build v2.0<br>
+            Phase 1: Core Extraction Complete<br>
+            Vite Dev Server Active
+        </div>
+    </div>
+
+    <script type="module">
+        import { Choreographer } from './src/core/Choreographer.js';
+
+        let choreographer = null;
+        const statusDisplay = document.getElementById('status-display');
+
+        function addStatus(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `status-line ${type}`;
+            line.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            statusDisplay.insertBefore(line, statusDisplay.firstChild);
+
+            // Keep only last 20 lines
+            while (statusDisplay.children.length > 20) {
+                statusDisplay.removeChild(statusDisplay.lastChild);
+            }
+        }
+
+        async function initChoreographer() {
+            try {
+                addStatus('Creating Choreographer instance...', 'info');
+                choreographer = new Choreographer();
+
+                addStatus('Initializing systems...', 'info');
+                await choreographer.init();
+
+                addStatus('Choreographer ready!', 'success');
+                document.getElementById('current-mode').textContent = 'READY';
+                document.getElementById('current-system').textContent = choreographer.currentSystem;
+
+                // Hide loading indicator
+                document.getElementById('loading-indicator').classList.add('hidden');
+
+                setupEventListeners();
+
+            } catch (error) {
+                addStatus(`Initialization error: ${error.message}`, 'error');
+                console.error('Choreographer init failed:', error);
+            }
+        }
+
+        function setupEventListeners() {
+            // Audio file upload
+            document.getElementById('audio-file-input').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                addStatus(`Loading audio: ${file.name}`, 'info');
+                try {
+                    await choreographer.loadAudioFile(file);
+                    addStatus('Audio loaded successfully', 'success');
+                    document.getElementById('audio-status').textContent = file.name;
+
+                    // Enable controls
+                    document.getElementById('play-btn').disabled = false;
+                    document.getElementById('pause-btn').disabled = false;
+                    document.getElementById('stop-btn').disabled = false;
+                    document.getElementById('analyze-btn').disabled = false;
+                    document.getElementById('export-video-btn').disabled = false;
+                    document.getElementById('manual-record-btn').disabled = false;
+
+                } catch (error) {
+                    addStatus(`Audio load error: ${error.message}`, 'error');
+                }
+            });
+
+            // Playback controls
+            document.getElementById('play-btn').addEventListener('click', async () => {
+                try {
+                    await choreographer.play();
+                    addStatus('Playback started', 'success');
+                    document.getElementById('current-mode').textContent = choreographer.choreographyMode.toUpperCase();
+                } catch (error) {
+                    addStatus(`Play error: ${error.message}`, 'error');
+                }
+            });
+
+            document.getElementById('pause-btn').addEventListener('click', () => {
+                choreographer.pause();
+                addStatus('Playback paused', 'info');
+            });
+
+            document.getElementById('stop-btn').addEventListener('click', () => {
+                choreographer.stop();
+                addStatus('Playback stopped', 'info');
+                document.getElementById('current-mode').textContent = 'STOPPED';
+            });
+
+            // System switching
+            document.querySelectorAll('.system-pill').forEach(pill => {
+                pill.addEventListener('click', async () => {
+                    const system = pill.dataset.system;
+                    addStatus(`Switching to ${system} system...`, 'info');
+
+                    try {
+                        await choreographer.switchSystem(system);
+                        document.getElementById('current-system').textContent = system;
+
+                        // Update UI
+                        document.querySelectorAll('.system-pill').forEach(p => {
+                            p.classList.toggle('active', p.dataset.system === system);
+                        });
+
+                        addStatus(`Switched to ${system}`, 'success');
+                    } catch (error) {
+                        addStatus(`System switch error: ${error.message}`, 'error');
+                    }
+                });
+            });
+
+            // AI Analysis
+            document.getElementById('analyze-btn').addEventListener('click', async () => {
+                const apiKey = document.getElementById('gemini-api-key').value.trim();
+                if (!apiKey) {
+                    addStatus('Please enter Gemini API key', 'error');
+                    return;
+                }
+
+                addStatus('Starting AI analysis...', 'info');
+                try {
+                    const analysis = await choreographer.analyzeSongWithAI(apiKey);
+                    choreographer.applyAIChoreography(analysis);
+
+                    const sectionCount = analysis.sections ? analysis.sections.length : 0;
+                    document.getElementById('sequence-count').textContent = sectionCount;
+                    addStatus(`AI analysis complete: ${sectionCount} sections`, 'success');
+
+                } catch (error) {
+                    addStatus(`AI analysis error: ${error.message}`, 'error');
+                }
+            });
+
+            // Video Export
+            document.getElementById('export-video-btn').addEventListener('click', () => {
+                addStatus('Video export not yet implemented', 'info');
+                addStatus('RecordingEngine integration pending', 'info');
+            });
+
+            document.getElementById('manual-record-btn').addEventListener('click', () => {
+                addStatus('Manual recording not yet implemented', 'info');
+            });
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            addStatus('DOM ready, initializing...', 'info');
+            initChoreographer();
+        });
+
+        // Make choreographer available for debugging
+        window.choreographer = choreographer;
+    </script>
+</body>
+</html>

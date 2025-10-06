@@ -54,8 +54,12 @@ npm install
 ### Development Server
 ```bash
 npm run dev
-# Opens at http://localhost:8765/vib34d-modular-rebuild/
+# Opens at http://localhost:8766/vib34d-modular-rebuild/
 ```
+
+### Access the Application
+- **Main App:** http://localhost:8766/vib34d-modular-rebuild/
+- **Module Test:** http://localhost:8766/vib34d-modular-rebuild/test.html
 
 ### Production Build
 ```bash
@@ -80,10 +84,16 @@ npm run preview
 - ✅ **Vite Build System** - Fast dev server, optimized production builds
 - ✅ **Path Aliases** - Clean imports with @core, @choreography, @systems, @ai, @ui
 
+### Working Now (Phase 2 In Progress)
+- ✅ **index.html** - Minimal working interface with Choreographer initialization
+- ✅ **Audio File Upload** - Load MP3/audio files
+- ✅ **Playback Controls** - Play/pause/stop functionality
+- ✅ **System Switching** - UI for faceted/quantum/holographic (engines pending)
+- ✅ **Status Display** - Real-time log of choreographer events
+
 ### Next Steps (Integration)
 - ⏳ **System Engines** - Import VIB34DIntegratedEngine, QuantumEngine, RealHolographicSystem
-- ⏳ **Simple Index.html** - Basic HTML that initializes Choreographer and tests modules
-- ⏳ **Full UI Components** - Extract controls, timeline, waveform display from monolithic file
+- ⏳ **Full UI Components** - Extract timeline, waveform display from monolithic file
 - ⏳ **End-to-End Testing** - Verify upload → analyze → choreograph → export workflow
 - ⏳ **Production Deployment** - Build and deploy to GitHub Pages
 
