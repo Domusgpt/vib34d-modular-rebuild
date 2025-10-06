@@ -10,6 +10,7 @@ import { applyChoreographyMode } from '../choreography/ChoreographyModes.js';
 import { applyParameterSweeps } from '../choreography/ParameterSweeps.js';
 import { applyColorPalette } from '../choreography/ColorPalettes.js';
 import { VIB34DIntegratedEngine, QuantumEngine, RealHolographicSystem, createTestVisualizer } from '../systems/StubEngines.js';
+import { CanvasLayerManager } from '../systems/CanvasLayerManager.js';
 
 export class Choreographer {
     constructor() {
@@ -20,6 +21,9 @@ export class Choreographer {
             quantum: { engine: null, canvases: [], active: false },
             holographic: { engine: null, canvases: [], active: false }
         };
+
+        // CRITICAL: Canvas layer manager for smart 5-layer canvas handling
+        this.canvasManager = null;
 
         // Base parameters - NEVER modified by audio
         this.baseParams = {
@@ -85,7 +89,14 @@ export class Choreographer {
     }
 
     async initCanvases() {
-        // Canvases are now created dynamically per system
+        // CRITICAL: Initialize canvas layer manager with stage container
+        const stageContainer = document.getElementById('stage-container');
+        if (!stageContainer) {
+            throw new Error('stage-container element not found');
+        }
+
+        this.canvasManager = new CanvasLayerManager(stageContainer);
+        console.log('✅ Canvas layer manager initialized');
     }
 
     async initCurrentSystem() {
@@ -116,43 +127,16 @@ export class Choreographer {
             await this.destroySystem(systemName);
         }
 
-        // CRITICAL: Create canvases with correct IDs for each system
-        const stageContainer = document.getElementById('stage-container');
-        if (!stageContainer) {
-            console.error('❌ stage-container not found!');
-            console.log = originalLog;
-            return;
+        // CRITICAL: Use CanvasLayerManager for smart 5-layer canvas creation
+        if (!this.canvasManager) {
+            throw new Error('CanvasLayerManager not initialized');
         }
 
-        stageContainer.innerHTML = ''; // Clear old canvases
+        // Create 5-layer canvas system with proper canvas IDs
+        const { canvases, layerSpecs } = this.canvasManager.createLayers(systemName);
+        sys.canvases = canvases;
 
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-
-        // Define canvas IDs for each system type
-        const canvasIds = {
-            faceted: ['background-canvas', 'shadow-canvas', 'content-canvas', 'highlight-canvas', 'accent-canvas'],
-            quantum: ['quantum-background-canvas', 'quantum-shadow-canvas', 'quantum-content-canvas', 'quantum-highlight-canvas', 'quantum-accent-canvas'],
-            holographic: ['holo-background-canvas', 'holo-shadow-canvas', 'holo-content-canvas', 'holo-highlight-canvas', 'holo-accent-canvas']
-        };
-
-        // Create canvases
-        const ids = canvasIds[systemName];
-        ids.forEach(id => {
-            const canvas = document.createElement('canvas');
-            canvas.id = id;
-            canvas.width = width;
-            canvas.height = height;
-            canvas.style.position = 'absolute';
-            canvas.style.top = '0';
-            canvas.style.left = '0';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            stageContainer.appendChild(canvas);
-            sys.canvases.push(canvas);
-        });
-
-        console.log(`✅ Created ${ids.length} canvases for ${systemName}`);
+        console.log(`✅ Created ${canvases.length} layers for ${systemName}`);
 
         // Wait for canvases to be fully laid out
         await new Promise(resolve => requestAnimationFrame(resolve));
@@ -253,8 +237,13 @@ export class Choreographer {
             sys.engine = null;
         }
 
+        // CRITICAL: Use CanvasLayerManager for smart canvas cleanup
+        if (this.canvasManager) {
+            this.canvasManager.destroyLayers(systemName);
+        }
+
         sys.canvases = [];
-        console.log(`✅ ${systemName} destroyed`);
+        console.log(`✅ ${systemName} destroyed with proper WebGL context cleanup`);
     }
 
     updateSystemParameters(engine) {
