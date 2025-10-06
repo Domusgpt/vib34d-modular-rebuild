@@ -9,6 +9,7 @@ import { AudioAnalyzer } from './AudioAnalyzer.js';
 import { applyChoreographyMode } from '../choreography/ChoreographyModes.js';
 import { applyParameterSweeps } from '../choreography/ParameterSweeps.js';
 import { applyColorPalette } from '../choreography/ColorPalettes.js';
+import { VIB34DIntegratedEngine, QuantumEngine, RealHolographicSystem, createTestVisualizer } from '../systems/StubEngines.js';
 
 export class Choreographer {
     constructor() {
@@ -159,19 +160,47 @@ export class Choreographer {
 
         // Create new engine
         try {
-            // NOTE: This requires the actual engine classes to be imported
-            // For now, we'll just log that we would create them
-            console.log(`📝 TODO: Create ${systemName} engine instance here`);
-            console.log('   Requires: VIB34DIntegratedEngine, QuantumEngine, RealHolographicSystem imports');
+            if (systemName === 'faceted') {
+                sys.engine = new VIB34DIntegratedEngine();
+                console.log('✅ Faceted engine created (stub)');
+            } else if (systemName === 'quantum') {
+                sys.engine = new QuantumEngine();
+                console.log('✅ Quantum engine created (stub)');
+            } else if (systemName === 'holographic') {
+                sys.engine = new RealHolographicSystem();
+                console.log('✅ Holographic engine created (stub)');
 
-            // sys.engine = new VIB34DIntegratedEngine(); // For faceted
-            // sys.engine = new QuantumEngine(); // For quantum
-            // sys.engine = new RealHolographicSystem(); // For holographic
+                // Disable built-in audio reactivity
+                sys.engine.audioEnabled = false;
+                sys.engine.audioContext = null;
+                sys.engine.analyser = null;
+                sys.engine.initAudio = () => {};
+                sys.engine.updateAudio = () => {};
+                sys.engine.disableAudio = () => {};
+                sys.engine.applyAudioReactivityGrid = () => {};
+            }
 
-            // this.updateSystemParameters(sys.engine);
+            // Create test visualizer for each canvas
+            sys.canvases.forEach((canvas, index) => {
+                const visualizer = createTestVisualizer(canvas, systemName);
+                if (visualizer) {
+                    sys.engine.visualizers.push(visualizer);
+                    visualizer.start();
+                    console.log(`✅ Test visualizer ${index + 1} started on canvas: ${canvas.id}`);
+                }
+            });
+
+            this.updateSystemParameters(sys.engine);
+
+            if (sys.engine && sys.engine.setActive) {
+                sys.engine.setActive(true);
+            }
+
+            console.log(`✅ ${systemName} system created with ${sys.engine.visualizers.length} test visualizers`);
 
         } catch (error) {
             console.error(`❌ Failed to create ${systemName}:`, error);
+            console.error('Error details:', error.stack);
         } finally {
             console.log = originalLog;
         }
@@ -204,9 +233,15 @@ export class Choreographer {
                 sys.engine.setActive(false);
             }
 
-            // Destroy all visualizers and their WebGL contexts
+            // Destroy all visualizers
             if (sys.engine.visualizers && Array.isArray(sys.engine.visualizers)) {
                 sys.engine.visualizers.forEach(viz => {
+                    // Stop animation if it has a stop method
+                    if (viz.stop) {
+                        viz.stop();
+                    }
+
+                    // Lose WebGL context if it exists
                     if (viz.gl) {
                         const ext = viz.gl.getExtension('WEBGL_lose_context');
                         if (ext) ext.loseContext();
