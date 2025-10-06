@@ -9,7 +9,9 @@ import { AudioAnalyzer } from './AudioAnalyzer.js';
 import { applyChoreographyMode } from '../choreography/ChoreographyModes.js';
 import { applyParameterSweeps } from '../choreography/ParameterSweeps.js';
 import { applyColorPalette } from '../choreography/ColorPalettes.js';
-import { VIB34DIntegratedEngine, QuantumEngine, RealHolographicSystem, createTestVisualizer } from '../systems/StubEngines.js';
+import { VIB34DIntegratedEngine } from '../systems/VIB34DIntegratedEngine.js';
+import { QuantumEngine } from '../systems/QuantumEngine.js';
+import { RealHolographicSystem } from '../systems/RealHolographicSystem.js';
 import { CanvasLayerManager } from '../systems/CanvasLayerManager.js';
 
 export class Choreographer {
@@ -164,23 +166,15 @@ export class Choreographer {
                 sys.engine.applyAudioReactivityGrid = () => {};
             }
 
-            // Create test visualizer for each canvas
-            sys.canvases.forEach((canvas, index) => {
-                const visualizer = createTestVisualizer(canvas, systemName);
-                if (visualizer) {
-                    sys.engine.visualizers.push(visualizer);
-                    visualizer.start();
-                    console.log(`✅ Test visualizer ${index + 1} started on canvas: ${canvas.id}`);
-                }
-            });
-
+            // Real engines initialize their own visualizers
+            // Just set the engine as active and update parameters
             this.updateSystemParameters(sys.engine);
 
             if (sys.engine && sys.engine.setActive) {
                 sys.engine.setActive(true);
             }
 
-            console.log(`✅ ${systemName} system created with ${sys.engine.visualizers.length} test visualizers`);
+            console.log(`✅ ${systemName} system created with real WebGL engine`);
 
         } catch (error) {
             console.error(`❌ Failed to create ${systemName}:`, error);
