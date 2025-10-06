@@ -6,29 +6,32 @@
 // Import core modules
 import { RecordingEngine } from '@core/RecordingEngine.js';
 import { AudioAnalyzer } from '@core/AudioAnalyzer.js';
+import { Choreographer } from '@core/Choreographer.js';
 
 // Import choreography modules
 import { applyParameterSweeps } from '@choreography/ParameterSweeps.js';
 import { applyColorPalette, PRESET_PALETTES } from '@choreography/ColorPalettes.js';
+import { applyChoreographyMode, CHOREOGRAPHY_MODES } from '@choreography/ChoreographyModes.js';
 
 console.log('🎬 VIB34D Timeline Loading...');
 console.log('✅ RecordingEngine loaded');
 console.log('✅ AudioAnalyzer loaded');
+console.log('✅ Choreographer loaded');
 console.log('✅ Parameter Sweeps loaded');
 console.log('✅ Color Palettes loaded');
+console.log('✅ Choreography Modes loaded');
 console.log('📦 Preset Palettes:', Object.keys(PRESET_PALETTES));
+console.log('🎭 Choreography Modes:', Object.values(CHOREOGRAPHY_MODES));
 
 // Module status
 const MODULES_LOADED = {
-    core: ['RecordingEngine', 'AudioAnalyzer'],
-    choreography: ['ParameterSweeps', 'ColorPalettes'],
-    presets: Object.keys(PRESET_PALETTES)
+    core: ['RecordingEngine', 'AudioAnalyzer', 'Choreographer'],
+    choreography: ['ParameterSweeps', 'ColorPalettes', 'ChoreographyModes'],
+    presets: Object.keys(PRESET_PALETTES),
+    modes: Object.values(CHOREOGRAPHY_MODES)
 };
 
 console.log('📊 Modules loaded:', MODULES_LOADED);
-
-// TODO: Import and initialize full Choreographer class
-// For now, just verify modules load correctly
 
 window.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM Ready - VIB34D Timeline (Modular Build)');
@@ -49,6 +52,8 @@ window.addEventListener('DOMContentLoaded', () => {
         <div>✅ AudioAnalyzer (beat detection)</div>
         <div>✅ Parameter Sweeps (6 types)</div>
         <div>✅ Color Palettes (${Object.keys(PRESET_PALETTES).length} presets)</div>
+        <div>✅ Choreography Modes (${Object.values(CHOREOGRAPHY_MODES).length} modes)</div>
+        <div>✅ Choreographer (main orchestrator)</div>
         <div style="margin-top:5px;font-size:10px;opacity:0.7;">Server: http://localhost:8765</div>
     `;
     document.body.appendChild(status);
@@ -62,8 +67,11 @@ window.addEventListener('DOMContentLoaded', () => {
 export {
     RecordingEngine,
     AudioAnalyzer,
+    Choreographer,
     applyParameterSweeps,
     applyColorPalette,
+    applyChoreographyMode,
     PRESET_PALETTES,
+    CHOREOGRAPHY_MODES,
     MODULES_LOADED
 };

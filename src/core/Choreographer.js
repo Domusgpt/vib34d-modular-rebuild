@@ -1,0 +1,624 @@
+/**
+ * VIB34D Ultimate Choreographer
+ * Main orchestrator for 4D music video choreography system
+ * Coordinates systems, audio analysis, sequences, and recording
+ */
+
+import { RecordingEngine } from './RecordingEngine.js';
+import { AudioAnalyzer } from './AudioAnalyzer.js';
+import { applyChoreographyMode } from '../choreography/ChoreographyModes.js';
+import { applyParameterSweeps } from '../choreography/ParameterSweeps.js';
+import { applyColorPalette } from '../choreography/ColorPalettes.js';
+
+export class Choreographer {
+    constructor() {
+        this.currentSystem = 'faceted';
+        this.systemSwitchInProgress = false;
+        this.systems = {
+            faceted: { engine: null, canvases: [], active: true },
+            quantum: { engine: null, canvases: [], active: false },
+            holographic: { engine: null, canvases: [], active: false }
+        };
+
+        // Base parameters - NEVER modified by audio
+        this.baseParams = {
+            geometry: 1,
+            gridDensity: 15,
+            morphFactor: 1.0,
+            chaos: 0.2,
+            speed: 1.0,
+            hue: 200,
+            intensity: 0.5,
+            saturation: 0.8,
+            rot4dXW: 0.0,
+            rot4dYW: 0.0,
+            rot4dZW: 0.0
+        };
+
+        // Audio system
+        this.audioContext = null;
+        this.audioElement = null;
+        this.audioReactive = true;
+        this.reactivityStrength = 0.5;
+
+        // Timeline
+        this.sequences = [];
+        this.currentTime = 0;
+        this.duration = 0;
+        this.isPlaying = false;
+
+        // Enhanced choreography systems
+        this.activeColorPalette = null;
+        this.activeSweeps = {};
+
+        // Choreography mode (from ChoreographyModes.js)
+        this.choreographyMode = 'dynamic';
+        this.lastModeChange = 0;
+
+        // Pattern recognition
+        this.patternTemplates = {};
+        this.sectionPatterns = [];
+        this.songStructure = '';
+
+        // Initialize sub-systems
+        this.recordingEngine = null;
+        this.audioAnalyzer = null;
+        this.sequenceMonitorInterval = null;
+    }
+
+    async init() {
+        console.log('🎬 Initializing Choreographer...');
+
+        await this.initCanvases();
+        await this.initCurrentSystem();
+        this.setupAudio();
+        this.setupUI();
+
+        // Initialize recording engine
+        this.recordingEngine = new RecordingEngine(this);
+
+        // Initialize audio analyzer
+        this.audioAnalyzer = new AudioAnalyzer(this);
+
+        console.log('✅ Choreographer ready!');
+    }
+
+    async initCanvases() {
+        // Canvases are now created dynamically per system
+    }
+
+    async initCurrentSystem() {
+        // CRITICAL: Only initialize the active system to save resources
+        await this.createSystem(this.currentSystem);
+    }
+
+    async createSystem(systemName) {
+        console.log(`🔧 Creating ${systemName} system...`);
+
+        const sys = this.systems[systemName];
+
+        // Prevent console spam from visualizers
+        const originalLog = console.log;
+        const logThrottle = {};
+        console.log = (...args) => {
+            const msg = args.join(' ');
+            const key = msg.substring(0, 50);
+            const now = Date.now();
+            if (!logThrottle[key] || now - logThrottle[key] > 1000) {
+                logThrottle[key] = now;
+                originalLog.apply(console, args);
+            }
+        };
+
+        // Destroy existing engine if present
+        if (sys.engine) {
+            await this.destroySystem(systemName);
+        }
+
+        // CRITICAL: Create canvases with correct IDs for each system
+        const stageContainer = document.getElementById('stage-container');
+        if (!stageContainer) {
+            console.error('❌ stage-container not found!');
+            console.log = originalLog;
+            return;
+        }
+
+        stageContainer.innerHTML = ''; // Clear old canvases
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // Define canvas IDs for each system type
+        const canvasIds = {
+            faceted: ['background-canvas', 'shadow-canvas', 'content-canvas', 'highlight-canvas', 'accent-canvas'],
+            quantum: ['quantum-background-canvas', 'quantum-shadow-canvas', 'quantum-content-canvas', 'quantum-highlight-canvas', 'quantum-accent-canvas'],
+            holographic: ['holo-background-canvas', 'holo-shadow-canvas', 'holo-content-canvas', 'holo-highlight-canvas', 'holo-accent-canvas']
+        };
+
+        // Create canvases
+        const ids = canvasIds[systemName];
+        ids.forEach(id => {
+            const canvas = document.createElement('canvas');
+            canvas.id = id;
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.position = 'absolute';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            stageContainer.appendChild(canvas);
+            sys.canvases.push(canvas);
+        });
+
+        console.log(`✅ Created ${ids.length} canvases for ${systemName}`);
+
+        // Wait for canvases to be fully laid out
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        // Create new engine
+        try {
+            // NOTE: This requires the actual engine classes to be imported
+            // For now, we'll just log that we would create them
+            console.log(`📝 TODO: Create ${systemName} engine instance here`);
+            console.log('   Requires: VIB34DIntegratedEngine, QuantumEngine, RealHolographicSystem imports');
+
+            // sys.engine = new VIB34DIntegratedEngine(); // For faceted
+            // sys.engine = new QuantumEngine(); // For quantum
+            // sys.engine = new RealHolographicSystem(); // For holographic
+
+            // this.updateSystemParameters(sys.engine);
+
+        } catch (error) {
+            console.error(`❌ Failed to create ${systemName}:`, error);
+        } finally {
+            console.log = originalLog;
+        }
+    }
+
+    async switchSystem(systemName) {
+        if (systemName === this.currentSystem) return;
+
+        console.log(`🔄 Switching from ${this.currentSystem} to ${systemName}`);
+
+        await this.destroySystem(this.currentSystem);
+        this.currentSystem = systemName;
+        await this.createSystem(systemName);
+
+        // Update UI
+        document.querySelectorAll('.system-pill').forEach(pill => {
+            pill.classList.toggle('active', pill.dataset.system === systemName);
+        });
+
+        console.log(`✅ Switched to ${systemName}`);
+    }
+
+    async destroySystem(systemName) {
+        const sys = this.systems[systemName];
+
+        console.log(`🗑️ Destroying ${systemName} system...`);
+
+        if (sys.engine) {
+            if (sys.engine.setActive) {
+                sys.engine.setActive(false);
+            }
+
+            // Destroy all visualizers and their WebGL contexts
+            if (sys.engine.visualizers && Array.isArray(sys.engine.visualizers)) {
+                sys.engine.visualizers.forEach(viz => {
+                    if (viz.gl) {
+                        const ext = viz.gl.getExtension('WEBGL_lose_context');
+                        if (ext) ext.loseContext();
+                    }
+                });
+                sys.engine.visualizers = [];
+            }
+
+            sys.engine = null;
+        }
+
+        sys.canvases = [];
+        console.log(`✅ ${systemName} destroyed`);
+    }
+
+    updateSystemParameters(engine) {
+        if (!engine) return;
+
+        Object.entries(this.baseParams).forEach(([param, value]) => {
+            if (engine.parameterManager && engine.parameterManager.setParameter) {
+                engine.parameterManager.setParameter(param, value);
+            } else if (engine.updateParameter) {
+                engine.updateParameter(param, value);
+            }
+        });
+    }
+
+    setParameter(param, value) {
+        // Update base parameter
+        this.baseParams[param] = value;
+
+        // Update ALL systems
+        Object.values(this.systems).forEach(sys => {
+            if (!sys.engine) return;
+
+            if (sys.engine.parameterManager && sys.engine.parameterManager.setParameter) {
+                sys.engine.parameterManager.setParameter(param, value);
+                if (sys.engine.updateVisualizers) {
+                    sys.engine.updateVisualizers();
+                }
+            }
+
+            if (sys.engine.visualizers && Array.isArray(sys.engine.visualizers)) {
+                const params = this.baseParams;
+                sys.engine.visualizers.forEach(visualizer => {
+                    if (visualizer.updateParameters) {
+                        visualizer.updateParameters(params);
+                    }
+                });
+            }
+
+            if (sys.engine.updateParameter) {
+                sys.engine.updateParameter(param, value);
+            }
+        });
+    }
+
+    getCurrentParameters() {
+        return { ...this.baseParams };
+    }
+
+    setupAudio() {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        if (this.audioAnalyzer) {
+            this.audioAnalyzer.setupAnalyzer(this.audioContext);
+        }
+    }
+
+    async loadAudioFile(file) {
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+
+        // Resume AudioContext
+        if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+            console.log('🎵 AudioContext resumed');
+        }
+
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement.src = '';
+        }
+
+        this.audioElement = new Audio(url);
+        this.audioElement.crossOrigin = 'anonymous';
+
+        if (this.audioAnalyzer) {
+            this.audioAnalyzer.connectAudio(this.audioElement);
+        }
+
+        this.audioElement.addEventListener('loadedmetadata', () => {
+            this.duration = this.audioElement.duration;
+            console.log(`🎵 Audio loaded: ${this.duration.toFixed(2)}s`);
+        });
+
+        this.audioElement.addEventListener('error', (e) => {
+            console.error('Audio element error:', e);
+        });
+    }
+
+    applyAdvancedChoreography(audioData) {
+        const strength = this.reactivityStrength;
+        const sys = this.systems[this.currentSystem];
+        if (!sys.engine) return;
+
+        const setParam = (param, value) => {
+            if (sys.engine.parameterManager && sys.engine.parameterManager.setParameter) {
+                sys.engine.parameterManager.setParameter(param, value);
+            } else if (sys.engine.updateParameter) {
+                sys.engine.updateParameter(param, value);
+            }
+        };
+
+        // Use ChoreographyModes module
+        applyChoreographyMode(this.choreographyMode, audioData, setParam, strength, this.baseParams);
+    }
+
+    async analyzeSongWithAI(apiKey) {
+        if (!apiKey) throw new Error('No API key provided');
+        if (!this.audioElement) throw new Error('No audio file loaded');
+
+        const songDuration = this.duration || 180;
+        const currentBPM = this.audioAnalyzer ?
+            (this.audioAnalyzer.avgBeatInterval > 0 ? (60000 / this.audioAnalyzer.avgBeatInterval).toFixed(0) : 120)
+            : 120;
+
+        // Build AI prompt (simplified version)
+        const prompt = `Create a music choreography plan for a ${songDuration.toFixed(0)} second song at ${currentBPM} BPM. Return JSON with sections array containing: name, pattern, startTime, duration, system (faceted/quantum/holographic), geometry (0-7), choreographyMode, parameters, colorPalette, parameterSweeps.`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Gemini API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        let text = data.candidates[0].content.parts[0].text.trim();
+
+        // Extract JSON from response
+        if (text.startsWith('```json')) {
+            text = text.replace(/```json\n/, '').replace(/\n```$/, '');
+        } else if (text.startsWith('```')) {
+            text = text.replace(/```\n/, '').replace(/\n```$/, '');
+        }
+
+        return JSON.parse(text);
+    }
+
+    applyAIChoreography(analysis) {
+        console.log('🎭 Applying AI Choreography:', analysis);
+
+        this.sequences = [];
+
+        if (analysis.sections && Array.isArray(analysis.sections)) {
+            const processedSections = this.processPatternRecognition(analysis.sections);
+
+            processedSections.forEach((section, index) => {
+                const sequence = {
+                    name: section.name,
+                    startTime: section.startTime,
+                    duration: section.duration,
+                    system: section.system,
+                    geometry: section.geometry,
+                    mode: section.choreographyMode,
+                    parameters: section.parameters,
+                    pattern: section.pattern,
+                    colorPalette: section.colorPalette,
+                    parameterSweeps: section.parameterSweeps,
+                    active: false
+                };
+
+                this.sequences.push(sequence);
+            });
+
+            this.startSequenceMonitoring();
+            this.renderTimeline();
+        }
+    }
+
+    processPatternRecognition(sections) {
+        const patternOccurrences = {};
+
+        return sections.map((section, index) => {
+            const pattern = section.pattern;
+
+            if (!pattern) return section;
+
+            if (!patternOccurrences[pattern]) {
+                patternOccurrences[pattern] = 0;
+            }
+            patternOccurrences[pattern]++;
+
+            const occurrence = patternOccurrences[pattern];
+
+            // First occurrence stores the template
+            if (occurrence === 1) {
+                this.patternTemplates[pattern] = this.createPatternTemplate(section, pattern);
+                section.patternVariation = 'first';
+                return section;
+            }
+
+            // Subsequent occurrences reuse the template
+            const template = this.patternTemplates[pattern];
+
+            let variation = 'second';
+            if (occurrence >= 3) variation = 'final-climax';
+
+            this.applyPatternToSection(template, section, section.system, variation);
+            section.patternVariation = variation;
+
+            return section;
+        });
+    }
+
+    createPatternTemplate(section, patternType) {
+        return {
+            type: patternType,
+            geometry: section.geometry,
+            mode: section.mode || section.choreographyMode,
+            parameters: { ...section.parameters },
+            colorPalette: section.colorPalette ? { ...section.colorPalette } : null,
+            parameterSweeps: section.parameterSweeps ? { ...section.parameterSweeps } : null
+        };
+    }
+
+    applyPatternToSection(template, section, systemOverride = null, variation = null) {
+        section.geometry = template.geometry;
+        section.mode = template.mode;
+        section.parameters = { ...template.parameters };
+
+        if (template.colorPalette) {
+            section.colorPalette = {
+                ...template.colorPalette,
+                colors: template.colorPalette.colors ?
+                    template.colorPalette.colors.map(c => ({ ...c })) : []
+            };
+
+            if (variation) {
+                this.applyPatternVariation(section, variation);
+            }
+        }
+
+        if (template.parameterSweeps) {
+            section.parameterSweeps = {};
+            Object.entries(template.parameterSweeps).forEach(([key, sweep]) => {
+                section.parameterSweeps[key] = { ...sweep };
+            });
+        }
+
+        if (systemOverride) {
+            section.system = systemOverride;
+        }
+    }
+
+    applyPatternVariation(section, variation) {
+        switch (variation) {
+            case 'second':
+                if (section.parameters) {
+                    section.parameters.gridDensity = Math.min(95, (section.parameters.gridDensity || 50) * 1.1);
+                    section.parameters.intensity = Math.min(1.0, (section.parameters.intensity || 0.8) * 1.1);
+                }
+                break;
+
+            case 'final-climax':
+                if (section.parameters) {
+                    section.parameters.gridDensity = Math.min(100, (section.parameters.gridDensity || 50) * 1.5);
+                    section.parameters.chaos = Math.min(0.95, (section.parameters.chaos || 0.5) * 1.3);
+                    section.parameters.speed = Math.min(3.0, (section.parameters.speed || 1.0) * 1.5);
+                }
+                if (section.colorPalette && section.colorPalette.colors) {
+                    section.colorPalette.colors = section.colorPalette.colors.map(c => ({
+                        ...c,
+                        intensity: Math.min(1.0, (c.intensity || 0.8) * 1.2),
+                        saturation: Math.min(1.0, (c.saturation || 0.9) * 1.1)
+                    }));
+                }
+                break;
+        }
+    }
+
+    startSequenceMonitoring() {
+        if (this.sequenceMonitorInterval) {
+            clearInterval(this.sequenceMonitorInterval);
+        }
+
+        this.sequenceMonitorInterval = setInterval(() => {
+            if (!this.audioElement || !this.isPlaying) return;
+
+            const currentTime = this.audioElement.currentTime;
+            this.updateChoreographyAtTime(currentTime);
+        }, 100);
+    }
+
+    updateChoreographyAtTime(currentTime) {
+        this.sequences.forEach(seq => {
+            const inSequence = currentTime >= seq.startTime && currentTime < (seq.startTime + seq.duration);
+
+            if (inSequence && !seq.active) {
+                seq.active = true;
+
+                if (seq.system && seq.system !== this.currentSystem) {
+                    this.switchSystem(seq.system);
+                }
+
+                if (seq.parameters) {
+                    Object.entries(seq.parameters).forEach(([param, value]) => {
+                        this.setParameter(param, value);
+                        this.baseParams[param] = value;
+                    });
+                }
+
+                if (seq.mode) {
+                    this.choreographyMode = seq.mode;
+                }
+
+                if (seq.geometry !== undefined) {
+                    this.setParameter('geometry', seq.geometry);
+                }
+            }
+
+            if (inSequence && seq.colorPalette) {
+                const sectionTime = currentTime - seq.startTime;
+                const progress = sectionTime / seq.duration;
+                const beatPhase = this.audioAnalyzer ? this.audioAnalyzer.beatPhase : 0;
+                const audioData = this.audioAnalyzer ? this.audioAnalyzer.getAudioData() : null;
+
+                applyColorPalette(seq.colorPalette, progress, beatPhase, audioData, (p, v) => this.setParameter(p, v));
+            }
+
+            if (inSequence && seq.parameterSweeps) {
+                const sectionTime = currentTime - seq.startTime;
+                const progress = sectionTime / seq.duration;
+
+                applyParameterSweeps(seq.parameterSweeps, progress, seq.duration, (p, v) => this.setParameter(p, v));
+            }
+
+            if (!inSequence && seq.active) {
+                seq.active = false;
+            }
+        });
+    }
+
+    async play() {
+        if (!this.audioElement) {
+            console.warn('⚠️ No audio file loaded');
+            return;
+        }
+
+        if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+        }
+
+        await this.audioElement.play();
+        this.isPlaying = true;
+
+        if (this.audioAnalyzer) {
+            this.audioAnalyzer.startAnalysis();
+        }
+    }
+
+    pause() {
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.isPlaying = false;
+        }
+    }
+
+    stop() {
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement.currentTime = 0;
+            this.isPlaying = false;
+        }
+    }
+
+    renderTimeline() {
+        // TODO: Implement timeline rendering
+        console.log('📝 TODO: Implement timeline rendering UI');
+    }
+
+    setupUI() {
+        // TODO: Implement full UI setup
+        console.log('📝 TODO: Implement UI setup');
+    }
+
+    exportChoreography() {
+        const data = {
+            version: '1.0',
+            duration: this.duration,
+            sequences: this.sequences,
+            baseParams: this.baseParams
+        };
+
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `choreography-${Date.now()}.json`;
+        a.click();
+
+        console.log('💾 Choreography exported');
+    }
+}
