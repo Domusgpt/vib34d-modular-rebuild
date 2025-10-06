@@ -331,6 +331,9 @@
                 // Hide loading indicator
                 document.getElementById('loading-indicator').classList.add('hidden');
 
+                // Make available globally for debugging/testing
+                window.choreographer = choreographer;
+
                 setupEventListeners();
 
             } catch (error) {
@@ -446,9 +449,6 @@
             addStatus('DOM ready, initializing...', 'info');
             initChoreographer();
         });
-
-        // Make choreographer available for debugging
-        window.choreographer = choreographer;
     </script>
 </body>
 </html>
