@@ -231,7 +231,10 @@ export class EnhancedControls {
         }
 
         // Check if already exists
-        if (document.querySelector('.control-group label:contains("PARAMETERS")')) {
+        const existingParam = Array.from(document.querySelectorAll('.control-group label')).find(
+            label => label.textContent.includes('PARAMETERS')
+        );
+        if (existingParam) {
             console.log('✅ Parameter controls already exist');
             return;
         }
