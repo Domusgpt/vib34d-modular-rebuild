@@ -2,6 +2,16 @@
 
 **AI-Powered 4D Music Video Choreographer** - Refactored into clean, modular ES6 architecture
 
+## 🌐 **LIVE DEMO**
+**[https://domusgpt.github.io/vib34d-modular-rebuild/](https://domusgpt.github.io/vib34d-modular-rebuild/)**
+
+✨ **New Enhanced Features:**
+- 📊 Real-time performance monitoring
+- 🎨 8 built-in music presets (EDM, Chill, Rock, etc.)
+- 🎛️ Live parameter controls with sliders
+- ⌨️ 30+ keyboard shortcuts (press `/` for help)
+- 🔮 Real WebGL engines (Faceted, Quantum, Holographic)
+
 ## 🎯 What This Is
 
 This is a **complete architectural refactoring** of the VIB34D timeline choreographer system. The original 164KB monolithic HTML file has been transformed into a modern, modular codebase with proper build tooling.
