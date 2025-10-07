@@ -12,12 +12,37 @@ export class EnhancedControls {
     }
 
     init() {
+        console.log('🎛️ Initializing EnhancedControls...');
+
+        console.log('  📊 Creating performance display...');
         this.createPerformanceDisplay();
+
+        console.log('  🎨 Creating preset selector...');
         this.createPresetSelector();
+
+        console.log('  🎛️ Creating parameter controls...');
         this.createParameterControls();
+
+        console.log('  ⏱️ Setting up update loop...');
         this.setupUpdateLoop();
 
-        console.log('🎛️ EnhancedControls initialized');
+        // Verify components exist
+        const checks = {
+            perfDisplay: !!document.getElementById('performance-display'),
+            presetSelector: !!document.getElementById('preset-selector'),
+            intensitySlider: !!document.getElementById('intensity-slider'),
+            speedSlider: !!document.getElementById('speed-slider'),
+            chaosSlider: !!document.getElementById('chaos-slider')
+        };
+
+        console.log('✅ EnhancedControls initialized:', checks);
+
+        if (!checks.presetSelector) {
+            console.error('❌ Preset selector missing! Check control panel structure');
+        }
+        if (!checks.intensitySlider) {
+            console.error('❌ Parameter sliders missing! Check control panel structure');
+        }
     }
 
     /**
@@ -89,7 +114,16 @@ export class EnhancedControls {
      */
     createPresetSelector() {
         const container = document.getElementById('control-panel');
-        if (!container) return;
+        if (!container) {
+            console.warn('⚠️ Control panel not found - cannot add preset selector');
+            return;
+        }
+
+        // Check if already exists
+        if (document.getElementById('preset-selector')) {
+            console.log('✅ Preset selector already exists');
+            return;
+        }
 
         const presetGroup = document.createElement('div');
         presetGroup.className = 'control-group';
@@ -101,30 +135,50 @@ export class EnhancedControls {
             <button id="save-preset-btn" style="margin-top: 5px; padding: 5px; width: 100%;">💾 Save Current</button>
         `;
 
-        // Insert after system switching controls
-        const systemGroup = container.querySelector('.control-group:nth-child(3)');
-        if (systemGroup) {
-            systemGroup.after(presetGroup);
+        // Insert after VISUALIZATION SYSTEM group (3rd control-group)
+        const allGroups = container.querySelectorAll('.control-group');
+        console.log(`📊 Found ${allGroups.length} control groups`);
+
+        if (allGroups.length >= 3) {
+            // Insert after 3rd group (VISUALIZATION SYSTEM)
+            allGroups[2].after(presetGroup);
+            console.log('✅ Preset selector inserted after VISUALIZATION SYSTEM');
         } else {
-            container.insertBefore(presetGroup, container.firstChild.nextSibling);
+            // Fallback: insert at beginning
+            const firstChild = container.querySelector('.control-group');
+            if (firstChild) {
+                firstChild.before(presetGroup);
+            } else {
+                container.insertBefore(presetGroup, container.firstChild);
+            }
+            console.log('⚠️ Preset selector inserted at fallback position');
         }
 
         this.populatePresets();
 
         // Setup event listeners
-        document.getElementById('preset-selector').addEventListener('change', (e) => {
-            if (e.target.value) {
-                this.choreographer.presetManager.applyPreset(e.target.value);
-            }
-        });
+        const selector = document.getElementById('preset-selector');
+        const saveBtn = document.getElementById('save-preset-btn');
 
-        document.getElementById('save-preset-btn').addEventListener('click', () => {
-            const name = prompt('Enter preset name:');
-            if (name) {
-                this.choreographer.presetManager.saveCurrentAsPreset(name);
-                this.populatePresets();
-            }
-        });
+        if (selector) {
+            selector.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    console.log(`🎨 Applying preset: ${e.target.value}`);
+                    this.choreographer.presetManager.applyPreset(e.target.value);
+                }
+            });
+        }
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                const name = prompt('Enter preset name:');
+                if (name) {
+                    this.choreographer.presetManager.saveCurrentAsPreset(name);
+                    this.populatePresets();
+                    console.log(`💾 Saved preset: ${name}`);
+                }
+            });
+        }
     }
 
     /**
@@ -171,7 +225,16 @@ export class EnhancedControls {
      */
     createParameterControls() {
         const container = document.getElementById('control-panel');
-        if (!container) return;
+        if (!container) {
+            console.warn('⚠️ Control panel not found - cannot add parameter controls');
+            return;
+        }
+
+        // Check if already exists
+        if (document.querySelector('.control-group label:contains("PARAMETERS")')) {
+            console.log('✅ Parameter controls already exist');
+            return;
+        }
 
         const paramGroup = document.createElement('div');
         paramGroup.className = 'control-group';
@@ -186,8 +249,19 @@ export class EnhancedControls {
             ${this.createSlider('saturation', 'Saturation', 0, 1, 0.01)}
         `;
 
-        // Insert at the end
-        container.appendChild(paramGroup);
+        // Insert before STATUS LOG group (last group)
+        const statusGroup = Array.from(container.querySelectorAll('.control-group')).find(g =>
+            g.querySelector('label')?.textContent.includes('STATUS LOG')
+        );
+
+        if (statusGroup) {
+            statusGroup.before(paramGroup);
+            console.log('✅ Parameter controls inserted before STATUS LOG');
+        } else {
+            // Fallback: append to end
+            container.appendChild(paramGroup);
+            console.log('⚠️ Parameter controls appended to end');
+        }
 
         // Setup sliders
         this.setupParameterSliders();
