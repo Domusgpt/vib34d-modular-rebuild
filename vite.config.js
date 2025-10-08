@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/vib34d-timeline-dev/',
+  base: '/vib34d-modular-rebuild/',
   build: {
     outDir: 'dist',
     rollupOptions: {
