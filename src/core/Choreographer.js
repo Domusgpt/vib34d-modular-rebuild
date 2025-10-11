@@ -681,4 +681,53 @@ export class Choreographer {
 
         console.log('💾 Choreography exported');
     }
+
+    /**
+     * Get current active engine for external control
+     */
+    get currentEngine() {
+        const sys = this.systems[this.currentSystem];
+        return sys ? sys.engine : null;
+    }
+
+    /**
+     * Update geometry for current engine
+     * @param {Array} vertices - 4D vertex array [[x,y,z,w], ...]
+     */
+    updateGeometry(vertices) {
+        const engine = this.currentEngine;
+        if (!engine) {
+            console.warn('⚠️ No active engine to update geometry');
+            return;
+        }
+
+        console.log(`🔺 Updating geometry for ${this.currentSystem} engine (${vertices.length} vertices)`);
+
+        // Different engines may have different update methods
+        if (engine.updateGeometry) {
+            engine.updateGeometry(vertices);
+        } else if (engine.parameterManager && engine.parameterManager.setGeometry) {
+            engine.parameterManager.setGeometry(vertices);
+        } else if (engine.setParameter) {
+            engine.setParameter('vertices', vertices);
+        } else {
+            console.warn(`⚠️ Engine ${this.currentSystem} does not support geometry updates`);
+        }
+
+        // Force visualizer update
+        if (engine.updateVisualizers) {
+            engine.updateVisualizers();
+        } else if (engine.update) {
+            engine.update();
+        }
+    }
+
+    /**
+     * Set geometry by index (for backwards compatibility)
+     * @param {number} geometryIndex
+     */
+    setGeometry(geometryIndex) {
+        this.baseParams.geometry = geometryIndex;
+        this.updateParameter('geometry', geometryIndex);
+    }
 }

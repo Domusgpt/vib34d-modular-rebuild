@@ -317,27 +317,21 @@ export class GeometryControls {
     }
 
     updateGeometry() {
-        if (!this.choreographer.currentEngine) return;
-
         const geometry = Polytopes.getGeometry(this.currentGeometry, this.geometryScale || 1, { segments: this.geometrySegments || 20 });
 
-        // Send geometry to current engine
-        if (this.choreographer.currentEngine.updateGeometry) {
-            this.choreographer.currentEngine.updateGeometry(geometry);
-        }
+        // Use choreographer's updateGeometry method
+        this.choreographer.updateGeometry(geometry);
 
-        console.log(`🔺 Geometry updated: ${this.currentGeometry}`);
+        console.log(`🔺 Geometry updated: ${this.currentGeometry} (${geometry.length} vertices)`);
     }
 
     updateMorphedGeometry() {
-        if (!this.choreographer.currentEngine || !this.morphEnabled) return;
+        if (!this.morphEnabled) return;
 
         const morphed = this.morpher.getMorphedGeometry();
 
-        // Send morphed geometry to current engine
-        if (this.choreographer.currentEngine.updateGeometry) {
-            this.choreographer.currentEngine.updateGeometry(morphed);
-        }
+        // Use choreographer's updateGeometry method
+        this.choreographer.updateGeometry(morphed);
     }
 
     // Public API for external control
