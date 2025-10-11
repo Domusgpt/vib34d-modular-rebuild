@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIB34D Music Choreographer - Modular Build</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0ff;
+            overflow: hidden;
+        }
+
+        #stage-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 1;
+        }
+
+        #control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 80vh;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #0ff;
+            padding: 15px;
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        #control-panel h2 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #0ff;
+            text-align: center;
+            border-bottom: 1px solid #0ff;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            color: #0ff;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 5px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #0ff;
+            color: #0ff;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #0ff;
+            color: #0ff;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 5px;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .system-pills {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .system-pill {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #0ff;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .system-pill:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .system-pill.active {
+            background: #0ff;
+            color: #000;
+            font-weight: bold;
+        }
+
+        #status-display {
+            font-size: 9px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .status-line {
+            margin-bottom: 3px;
+            opacity: 0.8;
+        }
+
+        .status-line.success {
+            color: #0f0;
+        }
+
+        .status-line.error {
+            color: #f00;
+        }
+
+        .status-line.info {
+            color: #0ff;
+        }
+
+        #loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #0ff;
+            padding: 30px;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        #loading-indicator.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 255, 255, 0.3);
+            border-top-color: #0ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #mode-display {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0ff;
+            padding: 15px;
+            z-index: 100;
+            min-width: 250px;
+        }
+
+        #mode-display h3 {
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #0ff;
+        }
+
+        #mode-display .mode-value {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        #mode-display .mode-details {
+            font-size: 10px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .build-info {
+            font-size: 8px;
+            opacity: 0.5;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+        }
+    </style>
+  <script type="module" crossorigin src="/vib34d-modular-rebuild/assets/main-uUsXNtbG.js"></script>
+</head>
+<body>
+    <div id="loading-indicator">
+        <div class="spinner"></div>
+        <div>INITIALIZING VIB34D CHOREOGRAPHER...</div>
+        <div style="font-size: 10px; margin-top: 10px; opacity: 0.7;">Modular Build v2.0</div>
+    </div>
+
+    <div id="stage-container">
+        <!-- Canvas container - dynamically created per system -->
+    </div>
+
+    <div id="mode-display">
+        <h3>🎭 CHOREOGRAPHY STATUS</h3>
+        <div class="mode-value" id="current-mode">IDLE</div>
+        <div class="mode-details">
+            <div>System: <span id="current-system">-</span></div>
+            <div>Audio: <span id="audio-status">No file loaded</span></div>
+            <div>Sequences: <span id="sequence-count">0</span></div>
+        </div>
+    </div>
+
+    <div id="control-panel">
+        <h2>🎬 CHOREOGRAPHER CONTROL</h2>
+
+        <div class="control-group">
+            <label>📁 LOAD AUDIO FILE</label>
+            <input type="file" id="audio-file-input" accept="audio/*">
+        </div>
+
+        <div class="control-group">
+            <label>🎮 PLAYBACK CONTROLS</label>
+            <button id="play-btn" disabled>▶ PLAY</button>
+            <button id="pause-btn" disabled>⏸ PAUSE</button>
+            <button id="stop-btn" disabled>⏹ STOP</button>
+        </div>
+
+        <div class="control-group">
+            <label>🌐 VISUALIZATION SYSTEM</label>
+            <div class="system-pills">
+                <div class="system-pill active" data-system="faceted">FACETED</div>
+                <div class="system-pill" data-system="quantum">QUANTUM</div>
+                <div class="system-pill" data-system="holographic">HOLO</div>
+            </div>
+            <div style="font-size: 8px; opacity: 0.6; margin-top: 5px;">
+                ✅ Real WebGL engines active - 4D polytope rendering
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>🤖 AI CHOREOGRAPHY</label>
+            <input type="password" id="gemini-api-key" placeholder="Gemini API Key..."
+                   style="width: 100%; padding: 5px; margin-bottom: 5px; background: rgba(0,255,255,0.1); border: 1px solid #0ff; color: #0ff; font-size: 10px;">
+            <button id="analyze-btn" disabled>🎵 ANALYZE SONG</button>
+        </div>
+
+        <div class="control-group">
+            <label>🎥 VIDEO EXPORT</label>
+            <button id="export-video-btn" disabled>💾 EXPORT VIDEO</button>
+            <button id="manual-record-btn" disabled>⏺ MANUAL RECORD</button>
+        </div>
+
+        <div class="control-group">
+            <label>📊 STATUS LOG</label>
+            <div id="status-display">
+                <div class="status-line info">Choreographer initialized</div>
+                <div class="status-line info">Waiting for audio file...</div>
+            </div>
+        </div>
+
+        <div class="build-info">
+            VIB34D Modular Build v2.0<br>
+            Phase 1: Core Extraction Complete<br>
+            Vite Dev Server Active
+        </div>
+    </div>
+
+</body>
+</html>
