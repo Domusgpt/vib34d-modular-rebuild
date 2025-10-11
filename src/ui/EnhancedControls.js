@@ -5,6 +5,7 @@
 
 import { GeometryControls } from './controls/GeometryControls.js';
 import { VariationControls } from './controls/VariationControls.js';
+import { ColorControls } from './controls/ColorControls.js';
 
 export class EnhancedControls {
     constructor(choreographer) {
@@ -12,6 +13,7 @@ export class EnhancedControls {
         this.elements = {};
         this.geometryControls = null;
         this.variationControls = null;
+        this.colorControls = null;
 
         this.init();
     }
@@ -31,6 +33,10 @@ export class EnhancedControls {
         console.log('  🎨 Initializing variation controls...');
         this.variationControls = new VariationControls(this.choreographer);
         window.variationControls = this.variationControls; // Global access for search results
+
+        console.log('  🎨 Initializing color controls...');
+        this.colorControls = new ColorControls(this.choreographer);
+        window.colorControls = this.colorControls; // Global access for palette management
 
         console.log('  🔺 Initializing geometry controls...');
         this.geometryControls = new GeometryControls(this.choreographer);
