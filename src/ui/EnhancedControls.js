@@ -3,10 +3,13 @@
  * Performance monitoring, preset management, real-time parameter controls
  */
 
+import { GeometryControls } from './controls/GeometryControls.js';
+
 export class EnhancedControls {
     constructor(choreographer) {
         this.choreographer = choreographer;
         this.elements = {};
+        this.geometryControls = null;
 
         this.init();
     }
@@ -22,6 +25,9 @@ export class EnhancedControls {
 
         console.log('  🎛️ Creating parameter controls...');
         this.createParameterControls();
+
+        console.log('  🔺 Initializing geometry controls...');
+        this.geometryControls = new GeometryControls(this.choreographer);
 
         console.log('  ⏱️ Setting up update loop...');
         this.setupUpdateLoop();
