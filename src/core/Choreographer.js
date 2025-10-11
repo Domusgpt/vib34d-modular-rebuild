@@ -326,14 +326,21 @@ export class Choreographer {
         }
 
         // If we already have an audio element and source, disconnect and reuse
+        console.log(`🔍 Audio state check: element=${!!this.audioElement}, source=${!!this.mediaSource}`);
+
         if (this.audioElement && this.mediaSource) {
-            console.log('🔄 Reusing existing audio element');
+            console.log('🔄 Reusing existing audio element and source');
             this.audioElement.pause();
             this.audioElement.src = url;
             this.audioElement.load();
         } else {
             // First time setup - create audio element and connect to Web Audio API
             console.log('🎵 Creating new audio element and Web Audio connection');
+
+            // If there's an existing element but no source, something went wrong
+            if (this.audioElement && !this.mediaSource) {
+                console.warn('⚠️  Audio element exists but mediaSource is missing!');
+            }
 
             this.audioElement = new Audio(url);
             this.audioElement.crossOrigin = 'anonymous';
@@ -343,7 +350,8 @@ export class Choreographer {
             this.mediaSource.connect(this.analyser);
             this.analyser.connect(this.audioContext.destination);
 
-            console.log('✅ Web Audio API connected');
+            console.log('✅ Web Audio API connected - mediaSource stored');
+            console.log(`✅ Verification: element=${!!this.audioElement}, source=${!!this.mediaSource}`);
         }
 
         // Start audio analysis loop
