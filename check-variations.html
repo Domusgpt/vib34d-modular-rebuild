@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Variation Check</title>
+</head>
+<body>
+    <div id="test">Checking variations...</div>
+    <script type="module">
+        import { VariationManager } from './src/variations/VariationManager.js';
+        
+        const mockChoreographer = {
+            baseParams: { intensity: 0.5, speed: 1.0 },
+            updateParameter: (k, v) => console.log(`Update: ${k} = ${v}`)
+        };
+        
+        try {
+            const vm = new VariationManager(mockChoreographer);
+            document.getElementById('test').innerHTML = `✅ SUCCESS: ${vm.totalVariations} variations loaded`;
+            console.log('✅ VariationManager works!', vm);
+        } catch (err) {
+            document.getElementById('test').innerHTML = `❌ ERROR: ${err.message}`;
+            console.error('❌ VariationManager error:', err);
+        }
+    </script>
+</body>
+</html>

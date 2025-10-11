@@ -1,394 +1,282 @@
 /**
- * VIB34D Variation Management System
- * Manages 100 total variations: 30 default + 70 custom
+ * VIB34D Variation Management System 2.0
+ * Manages 200 total variations: 60 default + 140 custom
+ * EXPANDED from original 100 variations
+ *
+ * A Paul Phillips Manifestation
  */
 
-import { GeometryLibrary } from '../geometry/GeometryLibrary.js';
+import { Polytopes } from '../geometry/Polytopes.js';
 
 export class VariationManager {
-    constructor(engine) {
-        this.engine = engine;
-        
-        // Default variation names (30 total)
-        this.variationNames = [
-            // Tetrahedron Lattice (0-3)
-            'TETRAHEDRON LATTICE 1', 'TETRAHEDRON LATTICE 2', 'TETRAHEDRON LATTICE 3', 'TETRAHEDRON LATTICE 4',
-            
-            // Hypercube Lattice (4-7)
-            'HYPERCUBE LATTICE 1', 'HYPERCUBE LATTICE 2', 'HYPERCUBE LATTICE 3', 'HYPERCUBE LATTICE 4',
-            
-            // Sphere Lattice (8-11)
-            'SPHERE LATTICE 1', 'SPHERE LATTICE 2', 'SPHERE LATTICE 3', 'SPHERE LATTICE 4',
-            
-            // Torus Lattice (12-15)
-            'TORUS LATTICE 1', 'TORUS LATTICE 2', 'TORUS LATTICE 3', 'TORUS LATTICE 4',
-            
-            // Klein Bottle Lattice (16-19)
-            'KLEIN BOTTLE LATTICE 1', 'KLEIN BOTTLE LATTICE 2', 'KLEIN BOTTLE LATTICE 3', 'KLEIN BOTTLE LATTICE 4',
-            
-            // Fractal Lattice (20-22)
-            'FRACTAL LATTICE 1', 'FRACTAL LATTICE 2', 'FRACTAL LATTICE 3',
-            
-            // Wave Lattice (23-25)
-            'WAVE LATTICE 1', 'WAVE LATTICE 2', 'WAVE LATTICE 3',
-            
-            // Crystal Lattice (26-29)
-            'CRYSTAL LATTICE 1', 'CRYSTAL LATTICE 2', 'CRYSTAL LATTICE 3', 'CRYSTAL LATTICE 4'
-        ];
-        
-        // Custom variations storage (70 slots)
-        this.customVariations = new Array(70).fill(null);
-        
-        // Total variation count
-        this.totalVariations = 100;
+    constructor(choreographer) {
+        this.choreographer = choreographer;
+
+        // Expanded default variations (60 total - doubled from 30)
+        this.variationNames = this.generateVariationNames();
+
+        // Custom variations storage (140 slots - doubled from 70)
+        this.customVariations = new Array(140).fill(null);
+
+        // Total variation count (doubled from 100)
+        this.totalVariations = 200;
+
+        // Current variation index
+        this.currentVariation = 0;
+
+        // Variation categories for filtering
+        this.categories = {
+            minimal: [],
+            balanced: [],
+            intense: [],
+            extreme: [],
+            genre: [],
+            mood: []
+        };
+
+        this.initializeCategories();
+        this.loadCustomVariations();
     }
-    
+
     /**
-     * Get variation name for display
+     * Generate all 60 default variation names
      */
+    generateVariationNames() {
+        const names = [];
+
+        // Geometry-based variations (22 geometries × 2 levels = 44)
+        const geometries = Polytopes.getAllGeometryNames();
+        geometries.forEach((geom) => {
+            names.push(`${geom} - BALANCED`);
+            names.push(`${geom} - INTENSE`);
+        });
+
+        // Genre presets (8 variations)
+        names.push('EDM DROP HEAVY', 'LO-FI CHILL', 'HEAVY METAL AGGRO', 'CLASSICAL ELEGANT',
+                   'JAZZ SMOOTH', 'HIP-HOP BOUNCE', 'AMBIENT ETHEREAL', 'TECHNO PULSE');
+
+        // Mood presets (8 variations)
+        names.push('ENERGETIC ORANGE', 'CALM BLUE', 'ROMANTIC PURPLE', 'AGGRESSIVE RED',
+                   'HAPPY YELLOW', 'MYSTERIOUS BLACK', 'PEACEFUL GREEN', 'PASSIONATE MAGENTA');
+
+        return names.slice(0, 60);
+    }
+
+    /**
+     * Initialize variation categories
+     */
+    initializeCategories() {
+        for (let i = 0; i < 44; i += 2) this.categories.minimal.push(i);
+        for (let i = 1; i < 44; i += 2) this.categories.balanced.push(i);
+        for (let i = 44; i < 52; i++) this.categories.intense.push(i);
+        for (let i = 52; i < 60; i++) this.categories.extreme.push(i);
+        this.categories.genre = [44, 45, 46, 47, 48, 49, 50, 51];
+        this.categories.mood = [52, 53, 54, 55, 56, 57, 58, 59];
+    }
+
     getVariationName(index) {
-        if (index < 30) {
-            return this.variationNames[index];
+        if (index < 60) {
+            return this.variationNames[index] || `DEFAULT ${index + 1}`;
         } else {
-            const customIndex = index - 30;
+            const customIndex = index - 60;
             const customVar = this.customVariations[customIndex];
             return customVar ? customVar.name : `CUSTOM ${customIndex + 1}`;
         }
     }
-    
-    /**
-     * Generate default variation parameters
-     */
-    generateDefaultVariation(index) {
-        if (index >= 30) return null;
-        
-        const geometryType = Math.floor(index / 4);
-        let level = index % 4; // Changed to let for reassignment
 
-        // Special handling for reduced geometry sets
-        let adjustedGeometryType = geometryType;
-        if (geometryType === 5 && level > 2) { // Fractal only has 3 levels
-            adjustedGeometryType = 5;
-            level = 2;
+    generateDefaultVariation(index) {
+        if (index >= 60) return null;
+
+        if (index < 44) {
+            const geomIndex = Math.floor(index / 2);
+            const level = index % 2;
+            const geometries = Polytopes.getAllGeometryNames();
+
+            return {
+                variation: index, geometry: geometries[geomIndex],
+                geometryScale: 1.0 + level * 0.5, segments: 15 + level * 15,
+                gridDensity: 20 + level * 20, morphFactor: 0.5 + level * 0.5,
+                chaos: level * 0.5, speed: 1.0 + level * 1.0,
+                hue: (geomIndex * 16.36) % 360, intensity: 0.5 + level * 0.3,
+                saturation: 0.7 + level * 0.2
+            };
         }
-        if (geometryType === 6 && level > 2) { // Wave only has 3 levels
-            adjustedGeometryType = 6;
-            level = 2;
+
+        if (index >= 44 && index < 52) {
+            const presets = [
+                { gridDensity: 50, chaos: 0.8, speed: 2.5, hue: 280, intensity: 0.9 },
+                { gridDensity: 10, chaos: 0.1, speed: 0.5, hue: 200, intensity: 0.3 },
+                { gridDensity: 60, chaos: 1.0, speed: 3.0, hue: 0, intensity: 1.0 },
+                { gridDensity: 25, chaos: 0.2, speed: 0.8, hue: 45, intensity: 0.5 },
+                { gridDensity: 30, chaos: 0.4, speed: 1.2, hue: 180, intensity: 0.6 },
+                { gridDensity: 35, chaos: 0.6, speed: 1.5, hue: 320, intensity: 0.7 },
+                { gridDensity: 15, chaos: 0.3, speed: 0.6, hue: 160, intensity: 0.4 },
+                { gridDensity: 45, chaos: 0.7, speed: 2.0, hue: 260, intensity: 0.8 }
+            ];
+            return { variation: index, geometry: 'Hypercube (Tesseract)', ...presets[index - 44], morphFactor: 1.0, saturation: 0.8 };
         }
-        
-        return {
-            variation: index,
-            geometry: adjustedGeometryType,
-            gridDensity: 8 + adjustedGeometryType * 2 + level * 1.5,
-            morphFactor: 0.2 + level * 0.2,
-            chaos: level * 0.2,
-            speed: 0.8 + level * 0.2,
-            hue: (index * 12.27) % 360,
-            rot4dXW: (level - 1.5) * 0.3,
-            rot4dYW: (adjustedGeometryType % 2) * 0.2,
-            rot4dZW: ((adjustedGeometryType + level) % 3) * 0.15,
-            dimension: 3.2 + level * 0.2
-        };
+
+        if (index >= 52) {
+            const moods = [
+                { hue: 30, intensity: 0.9, chaos: 0.7, speed: 2.0 },
+                { hue: 200, intensity: 0.3, chaos: 0.1, speed: 0.5 },
+                { hue: 280, intensity: 0.6, chaos: 0.3, speed: 0.8 },
+                { hue: 0, intensity: 1.0, chaos: 0.9, speed: 2.5 },
+                { hue: 60, intensity: 0.8, chaos: 0.5, speed: 1.5 },
+                { hue: 270, intensity: 0.4, chaos: 0.6, speed: 1.0 },
+                { hue: 120, intensity: 0.5, chaos: 0.2, speed: 0.7 },
+                { hue: 320, intensity: 0.9, chaos: 0.8, speed: 1.8 }
+            ];
+            return { variation: index, geometry: 'Hopf Fibration', gridDensity: 30, ...moods[index - 52], morphFactor: 1.0, saturation: 0.8 };
+        }
+        return null;
     }
-    
-    /**
-     * Apply specific variation to the engine
-     */
+
     applyVariation(index) {
         if (index < 0 || index >= this.totalVariations) return false;
-        
-        let params;
-        
-        if (index < 30) {
-            // Default variation
-            params = this.generateDefaultVariation(index);
-        } else {
-            // Custom variation
-            const customIndex = index - 30;
-            const customVar = this.customVariations[customIndex];
-            
-            if (customVar) {
-                params = { ...customVar.parameters, variation: index };
-            } else {
-                // Empty slot - use current parameters
-                params = { ...this.engine.parameterManager.getAllParameters(), variation: index };
-            }
-        }
-        
+
+        let params = index < 60 ? this.generateDefaultVariation(index) :
+            (this.customVariations[index - 60] ? { ...this.customVariations[index - 60].parameters, variation: index } :
+            { ...this.choreographer.baseParams, variation: index });
+
         if (params) {
-            this.engine.parameterManager.setParameters(params);
-            this.engine.currentVariation = index;
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Save current state as custom variation
-     */
-    saveCurrentAsCustom() {
-        // Find first empty custom slot
-        const emptyIndex = this.customVariations.findIndex(slot => slot === null);
-        
-        if (emptyIndex === -1) {
-            return -1; // No empty slots
-        }
-        
-        const currentParams = this.engine.parameterManager.getAllParameters();
-        const currentGeometry = GeometryLibrary.getGeometryName(currentParams.geometry);
-        
-        const customVariation = {
-            name: `${currentGeometry} CUSTOM ${emptyIndex + 1}`,
-            timestamp: new Date().toISOString(),
-            parameters: { ...currentParams },
-            metadata: {
-                basedOnVariation: this.engine.currentVariation,
-                createdFrom: 'current-state'
-            }
-        };
-        
-        this.customVariations[emptyIndex] = customVariation;
-        this.saveCustomVariations();
-        
-        return 30 + emptyIndex; // Return absolute variation index
-    }
-    
-    /**
-     * Delete custom variation
-     */
-    deleteCustomVariation(customIndex) {
-        if (customIndex >= 0 && customIndex < 70) {
-            this.customVariations[customIndex] = null;
-            this.saveCustomVariations();
-            return true;
-        }
-        return false;
-    }
-    
-    /**
-     * Populate the variation grid UI
-     */
-    populateGrid() {
-        const gridContainer = document.getElementById('variationGrid');
-        if (!gridContainer) return;
-        
-        gridContainer.innerHTML = '';
-        
-        // Create sections for different geometry types
-        const sections = [
-            { name: 'Tetrahedron', range: [0, 3], class: 'tetrahedron' },
-            { name: 'Hypercube', range: [4, 7], class: 'hypercube' },
-            { name: 'Sphere', range: [8, 11], class: 'sphere' },
-            { name: 'Torus', range: [12, 15], class: 'torus' },
-            { name: 'Klein Bottle', range: [16, 19], class: 'klein' },
-            { name: 'Fractal', range: [20, 22], class: 'fractal' },
-            { name: 'Wave', range: [23, 25], class: 'wave' },
-            { name: 'Crystal', range: [26, 29], class: 'crystal' }
-        ];
-        
-        // Add default variations
-        sections.forEach(section => {
-            const sectionDiv = document.createElement('div');
-            sectionDiv.className = 'variation-section';
-            sectionDiv.innerHTML = `<h3>${section.name} Lattice</h3>`;
-            
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'variation-buttons';
-            
-            for (let i = section.range[0]; i <= section.range[1]; i++) {
-                if (i < this.variationNames.length) {
-                    const button = this.createVariationButton(i, true, section.class);
-                    buttonContainer.appendChild(button);
-                }
-            }
-            
-            sectionDiv.appendChild(buttonContainer);
-            gridContainer.appendChild(sectionDiv);
-        });
-        
-        // Add custom variations section
-        const customSection = document.createElement('div');
-        customSection.className = 'variation-section custom-section';
-        customSection.innerHTML = '<h3>Custom Variations</h3>';
-        
-        const customContainer = document.createElement('div');
-        customContainer.className = 'variation-buttons custom-grid';
-        
-        for (let i = 0; i < 70; i++) {
-            const button = this.createVariationButton(30 + i, false, 'custom');
-            customContainer.appendChild(button);
-        }
-        
-        customSection.appendChild(customContainer);
-        gridContainer.appendChild(customSection);
-    }
-    
-    /**
-     * Create individual variation button
-     */
-    createVariationButton(variationIndex, isDefault, geomClass) {
-        const button = document.createElement('button');
-        const name = this.getVariationName(variationIndex);
-        
-        button.className = `preset-btn ${geomClass} ${isDefault ? 'default-variation' : 'custom-variation'}`;
-        button.dataset.variation = variationIndex;
-        button.title = `${variationIndex + 1}. ${name}`;
-        
-        // Button content
-        if (isDefault) {
-            button.innerHTML = `
-                <div class="variation-number">${(variationIndex + 1).toString().padStart(2, '0')}</div>
-                <div class="variation-level">Level ${(variationIndex % 4) + 1}</div>
-            `;
-        } else {
-            const customIndex = variationIndex - 30;
-            const hasCustom = this.customVariations[customIndex] !== null;
-            
-            button.innerHTML = `
-                <div class="variation-number">${(variationIndex + 1).toString()}</div>
-                <div class="variation-type">${hasCustom ? 'CUSTOM' : 'EMPTY'}</div>
-            `;
-            
-            if (!hasCustom) {
-                button.classList.add('empty-slot');
-            }
-        }
-        
-        // Click handler
-        button.addEventListener('click', () => {
-            if (isDefault || this.customVariations[variationIndex - 30] !== null) {
-                this.engine.setVariation(variationIndex);
-                this.updateVariationGrid();
-            }
-        });
-        
-        // Right-click for custom variations (delete)
-        if (!isDefault) {
-            button.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                const customIndex = variationIndex - 30;
-                if (this.customVariations[customIndex] !== null) {
-                    if (confirm(`Delete custom variation ${variationIndex + 1}?`)) {
-                        this.deleteCustomVariation(customIndex);
-                        this.populateGrid();
-                    }
+            Object.keys(params).forEach(key => {
+                if (key !== 'variation' && key !== 'geometry') {
+                    this.choreographer.setParameter(key, params[key]);
                 }
             });
+
+            if (params.geometry && window.enhancedControls?.geometryControls) {
+                window.enhancedControls.geometryControls.setGeometry(params.geometry);
+            }
+
+            this.currentVariation = index;
+            console.log(`✅ Applied variation ${index}: ${this.getVariationName(index)}`);
+            return true;
         }
-        
-        return button;
+        return false;
     }
-    
-    /**
-     * Update variation grid to show current selection
-     */
-    updateVariationGrid() {
-        const buttons = document.querySelectorAll('.preset-btn');
-        buttons.forEach(btn => {
-            btn.classList.remove('active');
-            if (parseInt(btn.dataset.variation) === this.engine.currentVariation) {
-                btn.classList.add('active');
+
+    saveCurrentAsCustom(name = null) {
+        const emptyIndex = this.customVariations.findIndex(slot => slot === null);
+        if (emptyIndex === -1) { console.warn('⚠️ No empty slots'); return -1; }
+
+        const currentParams = { ...this.choreographer.baseParams };
+        const currentGeometry = window.enhancedControls?.geometryControls?.currentGeometry || 'Hypercube (Tesseract)';
+
+        this.customVariations[emptyIndex] = {
+            name: name || `${currentGeometry} CUSTOM ${emptyIndex + 1}`,
+            timestamp: new Date().toISOString(),
+            parameters: { ...currentParams, geometry: currentGeometry },
+            metadata: { basedOnVariation: this.currentVariation, createdFrom: 'current-state' }
+        };
+
+        this.saveCustomVariations();
+        console.log(`💾 Saved custom variation ${60 + emptyIndex}`);
+        return 60 + emptyIndex;
+    }
+
+    deleteCustomVariation(customIndex) {
+        if (customIndex >= 0 && customIndex < 140) {
+            this.customVariations[customIndex] = null;
+            this.saveCustomVariations();
+            console.log(`🗑️ Deleted custom variation ${customIndex}`);
+            return true;
+        }
+        return false;
+    }
+
+    getByCategory(category) {
+        return (this.categories[category] || []).map(index => ({
+            index, name: this.getVariationName(index), params: this.generateDefaultVariation(index)
+        }));
+    }
+
+    searchVariations(query) {
+        const results = [], lowerQuery = query.toLowerCase();
+        this.variationNames.forEach((name, index) => {
+            if (name.toLowerCase().includes(lowerQuery)) results.push({ index, name, isCustom: false });
+        });
+        this.customVariations.forEach((variation, customIndex) => {
+            if (variation && variation.name.toLowerCase().includes(lowerQuery)) {
+                results.push({ index: 60 + customIndex, name: variation.name, isCustom: true });
             }
         });
+        return results;
     }
-    
-    /**
-     * Load custom variations from localStorage
-     */
+
     loadCustomVariations() {
         try {
-            const stored = localStorage.getItem('vib34d-custom-variations');
+            const stored = localStorage.getItem('vib34d-custom-variations-v2');
             if (stored) {
                 const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length === 70) {
+                if (Array.isArray(parsed) && parsed.length === 140) {
                     this.customVariations = parsed;
+                    console.log('✅ Loaded custom variations');
                 }
             }
-        } catch (error) {
-            console.warn('Failed to load custom variations:', error);
-        }
+        } catch (error) { console.warn('Failed to load:', error); }
     }
-    
-    /**
-     * Save custom variations to localStorage
-     */
+
     saveCustomVariations() {
         try {
-            localStorage.setItem('vib34d-custom-variations', JSON.stringify(this.customVariations));
-        } catch (error) {
-            console.warn('Failed to save custom variations:', error);
-        }
+            localStorage.setItem('vib34d-custom-variations-v2', JSON.stringify(this.customVariations));
+        } catch (error) { console.warn('Failed to save:', error); }
     }
-    
-    /**
-     * Export all custom variations as JSON
-     */
+
     exportCustomVariations() {
         const exportData = {
-            type: 'vib34d-custom-variations',
-            version: '1.0.0',
+            type: 'vib34d-custom-variations-v2', version: '2.0.0',
             timestamp: new Date().toISOString(),
             variations: this.customVariations.filter(v => v !== null)
         };
-        
-        const json = JSON.stringify(exportData, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'vib34d-custom-variations.json';
+        link.download = `vib34d-variations-${Date.now()}.json`;
         link.click();
-        
         URL.revokeObjectURL(url);
+        console.log('💾 Exported custom variations');
     }
-    
-    /**
-     * Import custom variations from JSON
-     */
+
     async importCustomVariations(file) {
         try {
-            const text = await file.text();
-            const data = JSON.parse(text);
-            
-            if (data.type === 'vib34d-custom-variations' && Array.isArray(data.variations)) {
-                // Merge imported variations
+            const data = JSON.parse(await file.text());
+            if ((data.type === 'vib34d-custom-variations-v2' || data.type === 'vib34d-custom-variations') && Array.isArray(data.variations)) {
                 let importCount = 0;
-                
                 data.variations.forEach(variation => {
                     const emptyIndex = this.customVariations.findIndex(slot => slot === null);
-                    if (emptyIndex !== -1) {
-                        this.customVariations[emptyIndex] = variation;
-                        importCount++;
-                    }
+                    if (emptyIndex !== -1) { this.customVariations[emptyIndex] = variation; importCount++; }
                 });
-                
                 this.saveCustomVariations();
-                this.populateGrid();
-                
+                console.log(`✅ Imported ${importCount} variations`);
                 return importCount;
             }
-        } catch (error) {
-            console.error('Failed to import custom variations:', error);
-        }
-        
+        } catch (error) { console.error('Import failed:', error); }
         return 0;
     }
-    
-    /**
-     * Get variation statistics
-     */
+
     getStatistics() {
         const customCount = this.customVariations.filter(v => v !== null).length;
-        
         return {
-            totalVariations: this.totalVariations,
-            defaultVariations: 30,
-            customVariations: customCount,
-            emptySlots: 70 - customCount,
-            currentVariation: this.engine.currentVariation,
-            isCustom: this.engine.currentVariation >= 30
+            totalVariations: this.totalVariations, defaultVariations: 60,
+            customVariations: customCount, emptySlots: 140 - customCount,
+            currentVariation: this.currentVariation, isCustom: this.currentVariation >= 60,
+            categories: Object.keys(this.categories).map(cat => ({ name: cat, count: this.categories[cat].length }))
         };
     }
+
+    getRandomFromCategory(category) {
+        const variations = this.categories[category] || [];
+        return variations.length > 0 ? variations[Math.floor(Math.random() * variations.length)] : -1;
+    }
+
+    getNextVariation() { return (this.currentVariation + 1) % this.totalVariations; }
+    getPreviousVariation() { return (this.currentVariation - 1 + this.totalVariations) % this.totalVariations; }
 }
+
+/**
+ * A Paul Phillips Manifestation
+ * Paul@clearseassolutions.com
+ */

@@ -4,12 +4,14 @@
  */
 
 import { GeometryControls } from './controls/GeometryControls.js';
+import { VariationControls } from './controls/VariationControls.js';
 
 export class EnhancedControls {
     constructor(choreographer) {
         this.choreographer = choreographer;
         this.elements = {};
         this.geometryControls = null;
+        this.variationControls = null;
 
         this.init();
     }
@@ -25,6 +27,10 @@ export class EnhancedControls {
 
         console.log('  🎛️ Creating parameter controls...');
         this.createParameterControls();
+
+        console.log('  🎨 Initializing variation controls...');
+        this.variationControls = new VariationControls(this.choreographer);
+        window.variationControls = this.variationControls; // Global access for search results
 
         console.log('  🔺 Initializing geometry controls...');
         this.geometryControls = new GeometryControls(this.choreographer);
