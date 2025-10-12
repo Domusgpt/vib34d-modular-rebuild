@@ -93,6 +93,34 @@ export class IntegratedControls {
                 </div>
             </div>
 
+            <div class="control-group" style="border-top: 2px solid rgba(0, 255, 255, 0.3); padding-top: 15px; margin-top: 15px;">
+                <label>🔄 4D ROTATION</label>
+                <div style="font-size: 9px; opacity: 0.7; margin-bottom: 10px;">
+                    Hyperspace rotation in XW, YW, ZW planes
+                </div>
+
+                <!-- XW Plane -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span style="font-size: 9px; min-width: 60px;">XW Plane:</span>
+                    <input type="range" id="param-rot4dXW" min="-3.14159" max="3.14159" step="0.01" value="${this.choreographer.baseParams.rot4dXW}" style="flex: 1;">
+                    <span id="param-rot4dXW-val" style="min-width: 50px; text-align: right;">${this.choreographer.baseParams.rot4dXW.toFixed(2)}</span>
+                </div>
+
+                <!-- YW Plane -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span style="font-size: 9px; min-width: 60px;">YW Plane:</span>
+                    <input type="range" id="param-rot4dYW" min="-3.14159" max="3.14159" step="0.01" value="${this.choreographer.baseParams.rot4dYW}" style="flex: 1;">
+                    <span id="param-rot4dYW-val" style="min-width: 50px; text-align: right;">${this.choreographer.baseParams.rot4dYW.toFixed(2)}</span>
+                </div>
+
+                <!-- ZW Plane -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 9px; min-width: 60px;">ZW Plane:</span>
+                    <input type="range" id="param-rot4dZW" min="-3.14159" max="3.14159" step="0.01" value="${this.choreographer.baseParams.rot4dZW}" style="flex: 1;">
+                    <span id="param-rot4dZW-val" style="min-width: 50px; text-align: right;">${this.choreographer.baseParams.rot4dZW.toFixed(2)}</span>
+                </div>
+            </div>
+
             <div class="control-group">
                 <label>🌐 VISUALIZATION SYSTEM</label>
                 <div class="system-pills">
@@ -129,14 +157,15 @@ export class IntegratedControls {
             <div class="build-info">
                 VIB34D Modular Build v2.0<br>
                 Integrated Controls Active<br>
-                All parameters synced to Choreographer
+                All 11 parameters synced to Choreographer<br>
+                ✅ 4D Rotation Controls Enabled
             </div>
         `;
     }
 
     setupParameterControls() {
-        // All base parameters
-        const params = ['geometry', 'gridDensity', 'morphFactor', 'chaos', 'speed', 'hue', 'intensity', 'saturation'];
+        // All base parameters - NOW INCLUDING 4D ROTATION
+        const params = ['geometry', 'gridDensity', 'morphFactor', 'chaos', 'speed', 'hue', 'intensity', 'saturation', 'rot4dXW', 'rot4dYW', 'rot4dZW'];
 
         params.forEach(param => {
             const slider = document.getElementById(`param-${param}`);
@@ -218,7 +247,7 @@ export class IntegratedControls {
     setupUpdateLoop() {
         // Update displays periodically to reflect any programmatic changes
         setInterval(() => {
-            const params = ['geometry', 'gridDensity', 'morphFactor', 'chaos', 'speed', 'hue', 'intensity', 'saturation'];
+            const params = ['geometry', 'gridDensity', 'morphFactor', 'chaos', 'speed', 'hue', 'intensity', 'saturation', 'rot4dXW', 'rot4dYW', 'rot4dZW'];
 
             params.forEach(param => {
                 const slider = document.getElementById(`param-${param}`);
