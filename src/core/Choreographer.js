@@ -309,9 +309,12 @@ export class Choreographer {
     setupAudio() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-        if (this.audioAnalyzer) {
-            this.audioAnalyzer.setupAnalyzer(this.audioContext);
-        }
+        // CREATE THE ANALYSER NODE - CRITICAL FOR AUDIO!
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 2048;
+        this.analyser.smoothingTimeConstant = 0.8;
+
+        console.log('✅ Audio system initialized with analyser node');
     }
 
     async loadAudioFile(file) {
@@ -632,9 +635,12 @@ export class Choreographer {
         await this.audioElement.play();
         this.isPlaying = true;
 
+        // Start audio analysis loop (FIXED: was calling wrong method name)
         if (this.audioAnalyzer) {
-            this.audioAnalyzer.startAnalysis();
+            this.audioAnalyzer.startAnalysisLoop();
         }
+
+        console.log('✅ Playback started');
     }
 
     pause() {

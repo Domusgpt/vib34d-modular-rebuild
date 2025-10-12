@@ -35,6 +35,21 @@ export class AudioAnalyzer {
     }
 
     /**
+     * Get current audio data for choreography (FIXED: method was missing!)
+     */
+    getAudioData() {
+        return {
+            bass: this.energyMomentum.bass,
+            mid: this.energyMomentum.mid,
+            high: this.energyMomentum.high,
+            energy: this.peakDetector.energy,
+            isBeat: performance.now() - this.lastBeatTime < 100,
+            beatPhase: this.beatPhase,
+            rhythmicPulse: this.rhythmicPulse
+        };
+    }
+
+    /**
      * Get average value for a frequency range
      */
     getFrequencyRange(dataArray, startIdx, endIdx) {
