@@ -460,6 +460,99 @@
             background: rgba(0, 255, 255, 0.4) !important;
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
         }
+
+        /* Smart Morphing Audio Button */
+        .smart-audio-btn {
+            min-width: 140px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: bold;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 200, 255, 0.3));
+            border: 2px solid #0ff;
+            color: #0ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .smart-audio-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(0, 200, 255, 0.4));
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .smart-audio-btn:active {
+            transform: scale(0.98);
+        }
+
+        .smart-audio-btn[data-state="load"] {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 200, 255, 0.3));
+        }
+
+        .smart-audio-btn[data-state="play"] {
+            background: linear-gradient(135deg, rgba(0, 255, 100, 0.2), rgba(0, 200, 100, 0.3));
+            border-color: #0f0;
+            color: #0f0;
+        }
+
+        .smart-audio-btn[data-state="pause"] {
+            background: linear-gradient(135deg, rgba(255, 200, 0, 0.2), rgba(255, 150, 0, 0.3));
+            border-color: #fa0;
+            color: #fa0;
+        }
+
+        .smart-audio-btn[data-state="playing"] {
+            background: linear-gradient(135deg, rgba(0, 255, 100, 0.3), rgba(0, 200, 100, 0.4));
+            border-color: #0f0;
+            color: #0f0;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 100, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 100, 0.6); }
+        }
+
+        /* Prominent Visualizer Tabs */
+        .visualizer-tabs {
+            display: flex;
+            gap: 5px;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+        }
+
+        .viz-tab {
+            padding: 10px 20px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            color: #0ff;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            min-width: 100px;
+        }
+
+        .viz-tab:hover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .viz-tab.active {
+            background: linear-gradient(135deg, #0ff, #0af);
+            color: #000;
+            border-color: #0ff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .viz-tab:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -469,28 +562,32 @@
         <div style="font-size: 10px; margin-top: 10px; opacity: 0.7;">Modular Build v2.0</div>
     </div>
 
-    <!-- Top Bar with Essential Controls -->
+    <!-- Top Bar with Smart Audio Button & Visualizer Tabs -->
     <div id="top-bar">
         <div class="logo">🎬 VIB34D</div>
         <div class="divider"></div>
 
+        <!-- Smart Morphing Audio Button -->
         <div class="control-section">
-            <input type="file" id="audio-file-input-top" accept="audio/*" title="Load Audio File">
-            <div class="status-text" id="audio-status-top">No audio loaded</div>
+            <button id="smart-audio-btn" class="smart-audio-btn" data-state="load">
+                📁 LOAD AUDIO
+            </button>
+            <input type="file" id="audio-file-input-top" accept="audio/*" style="display: none;">
         </div>
 
         <div class="divider"></div>
 
-        <div class="control-section">
-            <button id="play-btn-top" disabled>▶ PLAY</button>
-            <button id="pause-btn-top" disabled>⏸ PAUSE</button>
-            <button id="stop-btn-top" disabled>⏹ STOP</button>
+        <!-- Prominent Visualizer System Tabs -->
+        <div class="visualizer-tabs">
+            <button class="viz-tab active" data-system="faceted">FACETED</button>
+            <button class="viz-tab" data-system="quantum">QUANTUM</button>
+            <button class="viz-tab" data-system="holographic">HOLOGRAPHIC</button>
         </div>
 
         <div class="divider"></div>
 
         <div class="control-section" style="flex: 1; justify-content: flex-end;">
-            <div class="status-text" id="system-status-top">System: FACETED</div>
+            <div class="status-text" id="audio-status-top">Ready</div>
         </div>
     </div>
 
@@ -612,8 +709,46 @@
         }
 
         function setupEventListeners() {
-            // Audio file upload (TOP BAR)
-            document.getElementById('audio-file-input-top').addEventListener('change', async (e) => {
+            const smartBtn = document.getElementById('smart-audio-btn');
+            const fileInput = document.getElementById('audio-file-input-top');
+
+            // Smart Audio Button - morphs through states
+            smartBtn.addEventListener('click', () => {
+                const state = smartBtn.dataset.state;
+
+                if (state === 'load') {
+                    // Trigger file input
+                    fileInput.click();
+                } else if (state === 'play') {
+                    // Start playback
+                    choreographer.play().then(() => {
+                        smartBtn.dataset.state = 'playing';
+                        smartBtn.textContent = '⏸ PAUSE';
+                        addStatus('Playback started', 'success');
+                        document.getElementById('current-mode').textContent = choreographer.choreographyMode.toUpperCase();
+                    }).catch(error => {
+                        addStatus(`Play error: ${error.message}`, 'error');
+                    });
+                } else if (state === 'playing') {
+                    // Pause
+                    choreographer.pause();
+                    smartBtn.dataset.state = 'pause';
+                    smartBtn.textContent = '▶ PLAY';
+                    addStatus('Playback paused', 'info');
+                } else if (state === 'pause') {
+                    // Resume
+                    choreographer.play().then(() => {
+                        smartBtn.dataset.state = 'playing';
+                        smartBtn.textContent = '⏸ PAUSE';
+                        addStatus('Playback resumed', 'success');
+                    }).catch(error => {
+                        addStatus(`Play error: ${error.message}`, 'error');
+                    });
+                }
+            });
+
+            // Audio file upload
+            fileInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
@@ -624,10 +759,11 @@
                     document.getElementById('audio-status').textContent = file.name;
                     document.getElementById('audio-status-top').textContent = file.name;
 
+                    // Morph button to play state
+                    smartBtn.dataset.state = 'play';
+                    smartBtn.textContent = '▶ PLAY';
+
                     // Enable controls
-                    document.getElementById('play-btn-top').disabled = false;
-                    document.getElementById('pause-btn-top').disabled = false;
-                    document.getElementById('stop-btn-top').disabled = false;
                     document.getElementById('analyze-btn').disabled = false;
                     document.getElementById('export-video-btn').disabled = false;
                     document.getElementById('manual-record-btn').disabled = false;
@@ -637,29 +773,35 @@
                 }
             });
 
-            // Playback controls (TOP BAR)
-            document.getElementById('play-btn-top').addEventListener('click', async () => {
-                try {
-                    await choreographer.play();
-                    addStatus('Playback started', 'success');
-                    document.getElementById('current-mode').textContent = choreographer.choreographyMode.toUpperCase();
-                } catch (error) {
-                    addStatus(`Play error: ${error.message}`, 'error');
-                }
+            // Prominent Visualizer Tabs
+            document.querySelectorAll('.viz-tab').forEach(tab => {
+                tab.addEventListener('click', async () => {
+                    const system = tab.dataset.system;
+                    addStatus(`Switching to ${system} system...`, 'info');
+
+                    try {
+                        await choreographer.switchSystem(system);
+                        document.getElementById('current-system').textContent = system;
+                        document.getElementById('audio-status-top').textContent = `${system.toUpperCase()}`;
+
+                        // Update tab UI
+                        document.querySelectorAll('.viz-tab').forEach(t => {
+                            t.classList.toggle('active', t.dataset.system === system);
+                        });
+
+                        // Also update old system pills if they exist
+                        document.querySelectorAll('.system-pill').forEach(p => {
+                            p.classList.toggle('active', p.dataset.system === system);
+                        });
+
+                        addStatus(`Switched to ${system}`, 'success');
+                    } catch (error) {
+                        addStatus(`System switch error: ${error.message}`, 'error');
+                    }
+                });
             });
 
-            document.getElementById('pause-btn-top').addEventListener('click', () => {
-                choreographer.pause();
-                addStatus('Playback paused', 'info');
-            });
-
-            document.getElementById('stop-btn-top').addEventListener('click', () => {
-                choreographer.stop();
-                addStatus('Playback stopped', 'info');
-                document.getElementById('current-mode').textContent = 'STOPPED';
-            });
-
-            // System switching
+            // System switching (old pills in panel - keep for compatibility)
             document.querySelectorAll('.system-pill').forEach(pill => {
                 pill.addEventListener('click', async () => {
                     const system = pill.dataset.system;
@@ -668,11 +810,16 @@
                     try {
                         await choreographer.switchSystem(system);
                         document.getElementById('current-system').textContent = system;
-                        document.getElementById('system-status-top').textContent = `System: ${system.toUpperCase()}`;
+                        document.getElementById('audio-status-top').textContent = `${system.toUpperCase()}`;
 
                         // Update UI
                         document.querySelectorAll('.system-pill').forEach(p => {
                             p.classList.toggle('active', p.dataset.system === system);
+                        });
+
+                        // Update tabs
+                        document.querySelectorAll('.viz-tab').forEach(t => {
+                            t.classList.toggle('active', t.dataset.system === system);
                         });
 
                         addStatus(`Switched to ${system}`, 'success');
