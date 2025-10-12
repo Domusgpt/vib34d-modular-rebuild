@@ -372,7 +372,7 @@
 
     <script type="module">
         import { Choreographer } from './src/core/Choreographer.js';
-        import { EnhancedControls } from './src/ui/EnhancedControls.js';
+        import { IntegratedControls } from './src/ui/IntegratedControls.js';
 
         let choreographer = null;
         const statusDisplay = document.getElementById('status-display');
@@ -407,8 +407,8 @@
                 // Make available globally for debugging/testing
                 window.choreographer = choreographer;
 
-                // Initialize enhanced controls
-                window.enhancedControls = new EnhancedControls(choreographer);
+                // Initialize integrated controls (properly connected to Choreographer)
+                window.integratedControls = new IntegratedControls(choreographer);
 
                 setupEventListeners();
 
