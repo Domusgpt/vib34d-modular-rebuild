@@ -279,6 +279,69 @@
             padding-top: 10px;
             border-top: 1px solid rgba(0, 255, 255, 0.2);
         }
+
+        /* Collapsible Sections */
+        .collapsible-section {
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(0, 255, 255, 0.05);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .section-header:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #0ff;
+        }
+
+        .section-arrow {
+            font-size: 10px;
+            color: #0ff;
+            opacity: 0.7;
+        }
+
+        .section-content {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-row input[type="range"] {
+            flex: 1;
+        }
+
+        .slider-row span {
+            min-width: 40px;
+            text-align: right;
+            font-size: 10px;
+        }
+
+        .system-pill.active {
+            background: #0ff !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -372,7 +435,7 @@
 
     <script type="module">
         import { Choreographer } from './src/core/Choreographer.js';
-        import { IntegratedControls } from './src/ui/IntegratedControls.js';
+        import { IntegratedControlsCollapsible } from './src/ui/IntegratedControlsCollapsible.js';
 
         let choreographer = null;
         const statusDisplay = document.getElementById('status-display');
@@ -407,8 +470,8 @@
                 // Make available globally for debugging/testing
                 window.choreographer = choreographer;
 
-                // Initialize integrated controls (properly connected to Choreographer)
-                window.integratedControls = new IntegratedControls(choreographer);
+                // Initialize collapsible controls (properly connected to Choreographer)
+                window.integratedControls = new IntegratedControlsCollapsible(choreographer);
 
                 setupEventListeners();
 
