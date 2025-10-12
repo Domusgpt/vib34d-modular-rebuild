@@ -1,7 +1,6 @@
 /**
- * XYTouchpad - Interactive touch/mouse control
- * X-axis: Speed (0.1 - 10)
- * Y-axis: Density (1 - 100)
+ * XYTouchpad - Interactive touch/mouse control with configurable parameters
+ * Dropdowns allow assignment of any parameter to X/Y axes
  * Double-tap: Cycle geometry
  */
 
@@ -11,6 +10,26 @@ export class XYTouchpad {
         this.lastTapTime = 0;
         this.doubleTapDelay = 300; // ms
         this.isDragging = false;
+
+        // Default parameter assignments
+        this.xParam = 'speed';
+        this.yParam = 'gridDensity';
+
+        // Parameter configurations
+        this.paramConfigs = {
+            geometry: { min: 1, max: 24, step: 1, label: 'Geometry' },
+            gridDensity: { min: 1, max: 100, step: 1, label: 'Grid Density' },
+            morphFactor: { min: 0, max: 5, step: 0.01, label: 'Morph Factor' },
+            chaos: { min: 0, max: 3, step: 0.01, label: 'Chaos' },
+            speed: { min: 0.1, max: 10, step: 0.1, label: 'Speed' },
+            hue: { min: 0, max: 360, step: 1, label: 'Hue' },
+            intensity: { min: 0, max: 1, step: 0.01, label: 'Intensity' },
+            saturation: { min: 0, max: 1, step: 0.01, label: 'Saturation' },
+            rot4dXW: { min: -3.14159, max: 3.14159, step: 0.01, label: '4D XW' },
+            rot4dYW: { min: -3.14159, max: 3.14159, step: 0.01, label: '4D YW' },
+            rot4dZW: { min: -3.14159, max: 3.14159, step: 0.01, label: '4D ZW' }
+        };
+
         this.init();
     }
 
@@ -23,10 +42,31 @@ export class XYTouchpad {
         const container = document.getElementById('control-panel');
         if (!container) return;
 
+        // Generate parameter options
+        const paramOptions = Object.keys(this.paramConfigs).map(key =>
+            `<option value="${key}" ${key === 'speed' ? 'selected' : ''}>${this.paramConfigs[key].label}</option>`
+        ).join('');
+
+        const paramOptionsY = Object.keys(this.paramConfigs).map(key =>
+            `<option value="${key}" ${key === 'gridDensity' ? 'selected' : ''}>${this.paramConfigs[key].label}</option>`
+        ).join('');
+
         const touchpadHTML = `
             <div id="xy-touchpad" class="xy-touchpad">
-                <div class="touchpad-label-x">SPEED</div>
-                <div class="touchpad-label-y">DENSITY</div>
+                <div class="touchpad-controls">
+                    <div class="touchpad-dropdown-wrapper">
+                        <label>X:</label>
+                        <select id="xy-param-x" class="touchpad-dropdown">
+                            ${paramOptions}
+                        </select>
+                    </div>
+                    <div class="touchpad-dropdown-wrapper">
+                        <label>Y:</label>
+                        <select id="xy-param-y" class="touchpad-dropdown">
+                            ${paramOptionsY}
+                        </select>
+                    </div>
+                </div>
                 <div class="touchpad-cursor"></div>
                 <div class="touchpad-hint">Double-tap to cycle geometry</div>
             </div>
@@ -42,15 +82,38 @@ export class XYTouchpad {
     attachListeners() {
         const touchpad = document.getElementById('xy-touchpad');
         const cursor = touchpad?.querySelector('.touchpad-cursor');
+        const xDropdown = document.getElementById('xy-param-x');
+        const yDropdown = document.getElementById('xy-param-y');
+
         if (!touchpad || !cursor) return;
 
+        // Dropdown change handlers
+        if (xDropdown) {
+            xDropdown.addEventListener('change', (e) => {
+                this.xParam = e.target.value;
+                console.log(`XY Pad X-axis → ${this.paramConfigs[this.xParam].label}`);
+            });
+        }
+
+        if (yDropdown) {
+            yDropdown.addEventListener('change', (e) => {
+                this.yParam = e.target.value;
+                console.log(`XY Pad Y-axis → ${this.paramConfigs[this.yParam].label}`);
+            });
+        }
+
         // Mouse events
-        touchpad.addEventListener('mousedown', (e) => this.handleStart(e));
+        touchpad.addEventListener('mousedown', (e) => {
+            // Don't trigger on dropdown clicks
+            if (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION') return;
+            this.handleStart(e);
+        });
         document.addEventListener('mousemove', (e) => this.handleMove(e));
         document.addEventListener('mouseup', () => this.handleEnd());
 
         // Touch events
         touchpad.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'SELECT') return;
             e.preventDefault();
             this.handleStart(e.touches[0]);
         });
@@ -64,7 +127,10 @@ export class XYTouchpad {
         });
 
         // Double-tap detection
-        touchpad.addEventListener('click', (e) => this.handleTap(e));
+        touchpad.addEventListener('click', (e) => {
+            if (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION') return;
+            this.handleTap(e);
+        });
     }
 
     handleStart(e) {
@@ -103,16 +169,21 @@ export class XYTouchpad {
         const normX = Math.max(0, Math.min(1, x / rect.width));
         const normY = Math.max(0, Math.min(1, 1 - (y / rect.height))); // Invert Y
 
-        // Map to parameter ranges (EXTREME VALUES for audio reactivity)
-        // X-axis: Speed (0.1 - 10) EXTREME
-        const speed = 0.1 + (normX * 9.9);
+        // Get current parameter configs
+        const xConfig = this.paramConfigs[this.xParam];
+        const yConfig = this.paramConfigs[this.yParam];
 
-        // Y-axis: Density (1 - 100) EXTREME
-        const density = 1 + (normY * 99);
+        // Map to parameter ranges
+        const xValue = xConfig.min + (normX * (xConfig.max - xConfig.min));
+        const yValue = yConfig.min + (normY * (yConfig.max - yConfig.min));
+
+        // Round if integer parameter
+        const xFinal = xConfig.step >= 1 ? Math.round(xValue) : xValue;
+        const yFinal = yConfig.step >= 1 ? Math.round(yValue) : yValue;
 
         // Update choreographer
-        this.choreographer.setParameter('speed', speed);
-        this.choreographer.setParameter('gridDensity', Math.round(density));
+        this.choreographer.setParameter(this.xParam, xFinal);
+        this.choreographer.setParameter(this.yParam, yFinal);
 
         // Update cursor position
         cursor.style.left = `${normX * 100}%`;
