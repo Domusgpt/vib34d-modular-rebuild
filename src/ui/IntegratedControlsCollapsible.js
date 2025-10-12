@@ -28,8 +28,7 @@ export class IntegratedControlsCollapsible {
         this.sections = [
             new CollapsibleSection('core-params', '⚙️ CORE PARAMETERS', this.renderCoreParameters(), false),
             new CollapsibleSection('4d-rotation', '🔄 4D ROTATION', this.render4DRotation(), false),
-            new CollapsibleSection('audio', '🔊 AUDIO REACTIVITY', this.renderAudioControls(), true),
-            new CollapsibleSection('visualization', '🌐 VISUALIZATION', this.renderVisualization(), false)
+            new CollapsibleSection('audio', '🔊 AUDIO REACTIVITY', this.renderAudioControls(), true)
         ];
 
         // Render all sections
@@ -75,27 +74,6 @@ export class IntegratedControlsCollapsible {
                 <div class="slider-row">
                     <input type="range" id="param-speed" min="0.1" max="10" step="0.1" value="${p.speed}">
                     <span id="param-speed-val">${p.speed.toFixed(1)}</span>
-                </div>
-            </div>
-            <div class="control-group">
-                <label>Hue</label>
-                <div class="slider-row">
-                    <input type="range" id="param-hue" min="0" max="360" step="1" value="${p.hue}">
-                    <span id="param-hue-val">${p.hue}°</span>
-                </div>
-            </div>
-            <div class="control-group">
-                <label>Intensity</label>
-                <div class="slider-row">
-                    <input type="range" id="param-intensity" min="0" max="1" step="0.01" value="${p.intensity}">
-                    <span id="param-intensity-val">${p.intensity.toFixed(2)}</span>
-                </div>
-            </div>
-            <div class="control-group">
-                <label>Saturation</label>
-                <div class="slider-row">
-                    <input type="range" id="param-saturation" min="0" max="1" step="0.01" value="${p.saturation}">
-                    <span id="param-saturation-val">${p.saturation.toFixed(2)}</span>
                 </div>
             </div>
         `;
