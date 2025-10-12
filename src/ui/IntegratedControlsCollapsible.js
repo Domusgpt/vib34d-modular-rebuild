@@ -43,37 +43,37 @@ export class IntegratedControlsCollapsible {
         const p = this.choreographer.baseParams;
         return `
             <div class="control-group">
-                <label>Geometry (1-22)</label>
+                <label>Geometry (1-24)</label>
                 <div class="slider-row">
-                    <input type="range" id="param-geometry" min="1" max="22" step="1" value="${p.geometry}">
+                    <input type="range" id="param-geometry" min="1" max="24" step="1" value="${p.geometry}">
                     <span id="param-geometry-val">${p.geometry}</span>
                 </div>
             </div>
             <div class="control-group">
-                <label>Grid Density</label>
+                <label>Grid Density (1-100 EXTREME)</label>
                 <div class="slider-row">
-                    <input type="range" id="param-gridDensity" min="5" max="40" step="1" value="${p.gridDensity}">
+                    <input type="range" id="param-gridDensity" min="1" max="100" step="1" value="${p.gridDensity}">
                     <span id="param-gridDensity-val">${p.gridDensity}</span>
                 </div>
             </div>
             <div class="control-group">
-                <label>Morph Factor</label>
+                <label>Morph Factor (0-5 EXTREME)</label>
                 <div class="slider-row">
-                    <input type="range" id="param-morphFactor" min="0" max="2" step="0.01" value="${p.morphFactor}">
+                    <input type="range" id="param-morphFactor" min="0" max="5" step="0.01" value="${p.morphFactor}">
                     <span id="param-morphFactor-val">${p.morphFactor.toFixed(2)}</span>
                 </div>
             </div>
             <div class="control-group">
-                <label>Chaos</label>
+                <label>Chaos (0-3 EXTREME)</label>
                 <div class="slider-row">
-                    <input type="range" id="param-chaos" min="0" max="1" step="0.01" value="${p.chaos}">
+                    <input type="range" id="param-chaos" min="0" max="3" step="0.01" value="${p.chaos}">
                     <span id="param-chaos-val">${p.chaos.toFixed(2)}</span>
                 </div>
             </div>
             <div class="control-group">
-                <label>Speed</label>
+                <label>Speed (0.1-10 EXTREME)</label>
                 <div class="slider-row">
-                    <input type="range" id="param-speed" min="0.1" max="5" step="0.1" value="${p.speed}">
+                    <input type="range" id="param-speed" min="0.1" max="10" step="0.1" value="${p.speed}">
                     <span id="param-speed-val">${p.speed.toFixed(1)}</span>
                 </div>
             </div>
