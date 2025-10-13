@@ -57,9 +57,9 @@ export class VIB34DIntegratedEngine {
             this.setupControls();
             this.setupInteractions();
             this.loadCustomVariations();
-            this.populateVariationGrid();
+            // populateVariationGrid() removed - not needed for core functionality
             this.startRenderLoop();
-            
+
             this.statusManager.setStatus('VIB34D Engine initialized successfully', 'success');
             console.log('✅ VIB34D Engine ready');
         } catch (error) {
