@@ -26,6 +26,7 @@ export class IntegratedControlsCollapsible {
 
         // Create sections
         this.sections = [
+            new CollapsibleSection('universal-sliders', '🎚️ UNIVERSAL SLIDERS', this.renderUniversalSliders(), false),
             new CollapsibleSection('core-params', '⚙️ CORE PARAMETERS', this.renderCoreParameters(), false),
             new CollapsibleSection('4d-rotation', '🔄 4D ROTATION', this.render4DRotation(), false),
             new CollapsibleSection('audio', '🔊 AUDIO REACTIVITY', this.renderAudioControls(), true)
@@ -82,6 +83,67 @@ export class IntegratedControlsCollapsible {
             panel.classList.add('collapsed');
             collapseBtn.textContent = '+';
         }
+    }
+
+    renderUniversalSliders() {
+        // Define all available parameters with their ranges
+        const parameterOptions = [
+            { value: 'geometry', label: 'Geometry', min: 1, max: 24, step: 1 },
+            { value: 'gridDensity', label: 'Grid Density', min: 1, max: 100, step: 1 },
+            { value: 'morphFactor', label: 'Morph Factor', min: 0, max: 5, step: 0.01 },
+            { value: 'chaos', label: 'Chaos', min: 0, max: 3, step: 0.01 },
+            { value: 'speed', label: 'Speed', min: 0.1, max: 10, step: 0.1 },
+            { value: 'hue', label: 'Hue', min: 0, max: 360, step: 1 },
+            { value: 'intensity', label: 'Intensity', min: 0, max: 1, step: 0.01 },
+            { value: 'saturation', label: 'Saturation', min: 0, max: 1, step: 0.01 },
+            { value: 'moireScale', label: 'Moire Scale', min: 0, max: 5, step: 0.01 },
+            { value: 'glitchIntensity', label: 'Glitch Intensity', min: 0, max: 1, step: 0.01 },
+            { value: 'lineThickness', label: 'Line Thickness', min: 0, max: 5, step: 0.01 },
+            { value: 'rot4dXW', label: '4D Rotation XW', min: -3.14159, max: 3.14159, step: 0.01 },
+            { value: 'rot4dYW', label: '4D Rotation YW', min: -3.14159, max: 3.14159, step: 0.01 },
+            { value: 'rot4dZW', label: '4D Rotation ZW', min: -3.14159, max: 3.14159, step: 0.01 }
+        ];
+
+        // Get saved assignments or use defaults
+        const savedAssignments = JSON.parse(localStorage.getItem('universalSliderAssignments') || '["morphFactor", "chaos", "speed", "hue"]');
+
+        let html = '<div style="font-size: 9px; opacity: 0.7; margin-bottom: 10px;">Assign any parameter to any slider</div>';
+
+        // Create 4 universal sliders
+        for (let i = 0; i < 4; i++) {
+            const assignedParam = savedAssignments[i] || parameterOptions[i].value;
+            const paramConfig = parameterOptions.find(p => p.value === assignedParam) || parameterOptions[i];
+            const currentValue = this.choreographer.baseParams[assignedParam] || paramConfig.min;
+
+            html += `
+                <div class="control-group universal-slider-group" data-slider-index="${i}">
+                    <select class="universal-param-select" data-slider-index="${i}" style="width: 100%; padding: 6px; background: rgba(0,255,255,0.1); border: 1px solid rgba(0,255,255,0.3); color: #0ff; font-family: inherit; font-size: 10px; margin-bottom: 4px;">
+                        ${parameterOptions.map(opt =>
+                            `<option value="${opt.value}" ${opt.value === assignedParam ? 'selected' : ''}>${opt.label}</option>`
+                        ).join('')}
+                    </select>
+                    <div class="slider-row">
+                        <input type="range"
+                            class="universal-slider"
+                            data-slider-index="${i}"
+                            data-param="${assignedParam}"
+                            min="${paramConfig.min}"
+                            max="${paramConfig.max}"
+                            step="${paramConfig.step}"
+                            value="${currentValue}">
+                        <span class="universal-value" data-slider-index="${i}">${this.formatValue(assignedParam, currentValue)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        return html;
+    }
+
+    formatValue(param, value) {
+        if (param === 'hue') return `${Math.round(value)}°`;
+        if (param === 'geometry' || param === 'gridDensity') return Math.round(value);
+        return parseFloat(value).toFixed(2);
     }
 
     renderCoreParameters() {
@@ -198,6 +260,9 @@ export class IntegratedControlsCollapsible {
     }
 
     setupParameterControls() {
+        // Setup Universal Sliders first
+        this.setupUniversalSliders();
+
         const params = ['geometry', 'gridDensity', 'morphFactor', 'chaos', 'speed', 'hue', 'intensity', 'saturation', 'rot4dXW', 'rot4dYW', 'rot4dZW'];
 
         params.forEach(param => {
@@ -271,8 +336,80 @@ export class IntegratedControlsCollapsible {
         }
     }
 
+    setupUniversalSliders() {
+        const parameterOptions = [
+            { value: 'geometry', label: 'Geometry', min: 1, max: 24, step: 1 },
+            { value: 'gridDensity', label: 'Grid Density', min: 1, max: 100, step: 1 },
+            { value: 'morphFactor', label: 'Morph Factor', min: 0, max: 5, step: 0.01 },
+            { value: 'chaos', label: 'Chaos', min: 0, max: 3, step: 0.01 },
+            { value: 'speed', label: 'Speed', min: 0.1, max: 10, step: 0.1 },
+            { value: 'hue', label: 'Hue', min: 0, max: 360, step: 1 },
+            { value: 'intensity', label: 'Intensity', min: 0, max: 1, step: 0.01 },
+            { value: 'saturation', label: 'Saturation', min: 0, max: 1, step: 0.01 },
+            { value: 'moireScale', label: 'Moire Scale', min: 0, max: 5, step: 0.01 },
+            { value: 'glitchIntensity', label: 'Glitch Intensity', min: 0, max: 1, step: 0.01 },
+            { value: 'lineThickness', label: 'Line Thickness', min: 0, max: 5, step: 0.01 },
+            { value: 'rot4dXW', label: '4D Rotation XW', min: -3.14159, max: 3.14159, step: 0.01 },
+            { value: 'rot4dYW', label: '4D Rotation YW', min: -3.14159, max: 3.14159, step: 0.01 },
+            { value: 'rot4dZW', label: '4D Rotation ZW', min: -3.14159, max: 3.14159, step: 0.01 }
+        ];
+
+        // Handle dropdown changes (parameter reassignment)
+        document.querySelectorAll('.universal-param-select').forEach(select => {
+            select.addEventListener('change', (e) => {
+                const sliderIndex = parseInt(e.target.dataset.sliderIndex);
+                const newParam = e.target.value;
+                const paramConfig = parameterOptions.find(p => p.value === newParam);
+
+                // Update the slider element
+                const slider = document.querySelector(`.universal-slider[data-slider-index="${sliderIndex}"]`);
+                const valueDisplay = document.querySelector(`.universal-value[data-slider-index="${sliderIndex}"]`);
+
+                if (slider && paramConfig) {
+                    // Update slider attributes
+                    slider.setAttribute('data-param', newParam);
+                    slider.min = paramConfig.min;
+                    slider.max = paramConfig.max;
+                    slider.step = paramConfig.step;
+                    slider.value = this.choreographer.baseParams[newParam] || paramConfig.min;
+
+                    // Update value display
+                    valueDisplay.textContent = this.formatValue(newParam, slider.value);
+
+                    // Save assignments to localStorage
+                    const assignments = [];
+                    document.querySelectorAll('.universal-param-select').forEach(s => {
+                        assignments.push(s.value);
+                    });
+                    localStorage.setItem('universalSliderAssignments', JSON.stringify(assignments));
+
+                    console.log(`🎚️ Universal Slider ${sliderIndex + 1} reassigned to ${paramConfig.label}`);
+                }
+            });
+        });
+
+        // Handle slider input (parameter value changes)
+        document.querySelectorAll('.universal-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const param = e.target.dataset.param;
+                const value = parseFloat(e.target.value);
+                const sliderIndex = e.target.dataset.sliderIndex;
+                const valueDisplay = document.querySelector(`.universal-value[data-slider-index="${sliderIndex}"]`);
+
+                if (valueDisplay) {
+                    valueDisplay.textContent = this.formatValue(param, value);
+                }
+
+                this.choreographer.setParameter(param, value);
+            });
+        });
+
+        console.log('🎚️ Universal Sliders initialized');
+    }
+
     setupUpdateLoop() {
         setInterval(() => {
+            // Update regular parameter sliders
             const params = ['geometry', 'gridDensity', 'morphFactor', 'chaos', 'speed', 'hue', 'intensity', 'saturation', 'rot4dXW', 'rot4dYW', 'rot4dZW'];
             params.forEach(param => {
                 const slider = document.getElementById(`param-${param}`);
@@ -286,6 +423,21 @@ export class IntegratedControlsCollapsible {
                         valueDisplay.textContent = currentValue;
                     } else {
                         valueDisplay.textContent = currentValue.toFixed(2);
+                    }
+                }
+            });
+
+            // Update universal sliders
+            document.querySelectorAll('.universal-slider').forEach(slider => {
+                const param = slider.dataset.param;
+                const sliderIndex = slider.dataset.sliderIndex;
+                const currentValue = this.choreographer.baseParams[param];
+                const valueDisplay = document.querySelector(`.universal-value[data-slider-index="${sliderIndex}"]`);
+
+                if (currentValue !== undefined && slider.value != currentValue) {
+                    slider.value = currentValue;
+                    if (valueDisplay) {
+                        valueDisplay.textContent = this.formatValue(param, currentValue);
                     }
                 }
             });
