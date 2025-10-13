@@ -13,6 +13,12 @@ import { applyParameterSweeps } from '@choreography/ParameterSweeps.js';
 import { applyColorPalette, PRESET_PALETTES } from '@choreography/ColorPalettes.js';
 import { applyChoreographyMode, CHOREOGRAPHY_MODES } from '@choreography/ChoreographyModes.js';
 
+// Import UI modules
+import { IntegratedControlsCollapsible } from './ui/IntegratedControlsCollapsible.js';
+import { VisualsMenu } from './ui/VisualsMenu.js';
+import { XYTouchpad } from './ui/XYTouchpad.js';
+import { VisualizerXYPad } from './ui/VisualizerXYPad.js';
+
 console.log('🎬 VIB34D Timeline Loading...');
 console.log('✅ RecordingEngine loaded');
 console.log('✅ AudioAnalyzer loaded');
@@ -33,34 +39,62 @@ const MODULES_LOADED = {
 
 console.log('📊 Modules loaded:', MODULES_LOADED);
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 DOM Ready - VIB34D Timeline (Modular Build)');
 
-    // Hide loading indicator
-    const loading = document.getElementById('loading-indicator');
-    if (loading) {
-        loading.classList.add('hidden');
+    // Initialize Choreographer
+    try {
+        console.log('Creating Choreographer instance...');
+        const choreographer = new Choreographer();
+
+        console.log('Initializing systems...');
+        await choreographer.init();
+
+        console.log('Choreographer ready!');
+
+        // Update status displays
+        const currentMode = document.getElementById('current-mode');
+        const currentSystem = document.getElementById('current-system');
+        if (currentMode) currentMode.textContent = 'READY';
+        if (currentSystem) currentSystem.textContent = choreographer.currentSystem;
+
+        // Hide loading indicator
+        const loading = document.getElementById('loading-indicator');
+        if (loading) {
+            loading.classList.add('hidden');
+        }
+
+        // Make available globally for debugging/testing
+        window.choreographer = choreographer;
+
+        // Initialize collapsible controls (properly connected to Choreographer)
+        console.log('Initializing IntegratedControlsCollapsible...');
+        window.integratedControls = new IntegratedControlsCollapsible(choreographer);
+
+        // Initialize separate Visuals Menu
+        console.log('Initializing VisualsMenu...');
+        window.visualsMenu = new VisualsMenu(choreographer);
+
+        // Initialize XY Touchpad (with dropdowns)
+        console.log('Initializing XYTouchpad...');
+        window.xyTouchpad = new XYTouchpad(choreographer);
+
+        // Initialize Visualizer XY Pad
+        console.log('Initializing VisualizerXYPad...');
+        window.visualizerXYPad = new VisualizerXYPad(choreographer);
+
+        console.log('✅ All UI components initialized');
+
+        // Make modules available for debugging
+        window.VIB34D_MODULES = MODULES_LOADED;
+        console.log('🔧 Debug: window.VIB34D_MODULES available');
+        console.log('🔧 Debug: window.choreographer available');
+        console.log('🔧 Debug: window.integratedControls available');
+        console.log('🔧 Debug: window.visualsMenu available');
+
+    } catch (error) {
+        console.error('❌ Failed to initialize:', error);
     }
-
-    // Show system is modular
-    const status = document.createElement('div');
-    status.style.cssText = 'position:fixed;top:10px;right:10px;background:rgba(0,255,255,0.2);padding:10px;border:1px solid #0ff;color:#0ff;font-family:monospace;z-index:1000;font-size:12px;';
-    status.innerHTML = `
-        <div style="font-weight:bold;margin-bottom:5px;">🎯 MODULAR BUILD v2.0</div>
-        <div>✅ Vite + ES Modules</div>
-        <div>✅ RecordingEngine (with visualizer fixes)</div>
-        <div>✅ AudioAnalyzer (beat detection)</div>
-        <div>✅ Parameter Sweeps (6 types)</div>
-        <div>✅ Color Palettes (${Object.keys(PRESET_PALETTES).length} presets)</div>
-        <div>✅ Choreography Modes (${Object.values(CHOREOGRAPHY_MODES).length} modes)</div>
-        <div>✅ Choreographer (main orchestrator)</div>
-        <div style="margin-top:5px;font-size:10px;opacity:0.7;">Server: http://localhost:8765</div>
-    `;
-    document.body.appendChild(status);
-
-    // Make modules available for debugging
-    window.VIB34D_MODULES = MODULES_LOADED;
-    console.log('🔧 Debug: window.VIB34D_MODULES available');
 });
 
 // Export for use in other modules
