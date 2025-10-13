@@ -28,25 +28,23 @@
             z-index: 1;
         }
 
-        /* Top control bar for essential playback controls */
+        /* Top control bar - COMPACT REDESIGN */
         #top-bar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 50px;
-            background: rgba(0, 0, 0, 0.9);
-            border-bottom: 2px solid rgba(0, 255, 255, 0.6);
-            padding: 5px 20px;
+            right: 0;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.4);
+            padding: 4px 10px;
             z-index: 200;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
             backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1),
-                        inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+            box-shadow: 0 2px 10px rgba(0, 255, 255, 0.1);
             animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            transition: transform 0.3s ease;
         }
 
         #top-bar.minimized {
@@ -65,89 +63,91 @@
         }
 
         #top-bar .logo {
-            font-size: 16px;
+            font-size: 12px;
             font-weight: bold;
             color: #0ff;
             white-space: nowrap;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8),
-                         0 0 20px rgba(0, 255, 255, 0.4);
-            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+            letter-spacing: 1px;
         }
 
         #top-bar .divider {
             width: 1px;
-            height: 40px;
-            background: rgba(0, 255, 255, 0.3);
+            height: 30px;
+            background: rgba(0, 255, 255, 0.2);
         }
 
         #top-bar .control-section {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
         }
 
         #top-bar button {
-            padding: 8px 16px;
+            padding: 6px 12px;
             margin: 0;
             width: auto;
-            font-size: 12px;
-            min-width: 80px;
+            font-size: 10px;
+            min-width: 60px;
+            height: 32px;
         }
 
         #top-bar input[type="file"] {
             width: auto;
-            padding: 8px;
-            font-size: 10px;
+            padding: 6px;
+            font-size: 9px;
         }
 
         #top-bar .status-text {
-            font-size: 10px;
-            opacity: 0.8;
-            max-width: 200px;
+            font-size: 9px;
+            opacity: 0.7;
+            max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
+        /* REDESIGNED CONTROL PANEL - NO OVERLAP */
         #control-panel {
             position: fixed;
-            top: 70px;
-            right: 20px;
-            width: 320px;
-            max-height: calc(85vh - 70px);
-            background: rgba(0, 0, 0, 0.85);
-            border: 2px solid rgba(0, 255, 255, 0.6);
-            padding: 15px;
+            top: 45px;
+            right: 10px;
+            width: 300px;
+            max-height: calc(100vh - 55px);
+            background: rgba(0, 0, 0, 0.92);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            padding: 12px;
             z-index: 100;
             overflow-y: auto;
             backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.15),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.12);
+            border-radius: 8px;
             animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s ease;
             resize: both;
-            overflow: auto;
-            min-width: 280px;
-            min-height: 200px;
+            min-width: 250px;
+            min-height: 150px;
         }
 
         #control-panel.collapsed {
-            width: auto;
-            height: auto;
-            min-width: auto;
-            min-height: auto;
-            padding: 12px 8px;
+            width: 40px;
+            height: 150px;
+            min-width: 40px;
+            min-height: 150px;
+            padding: 10px 6px;
             overflow: visible;
             resize: none;
             cursor: pointer;
             z-index: 150;
-            background: linear-gradient(90deg, rgba(0,255,255,0.3), rgba(0,200,255,0.5));
+            background: linear-gradient(180deg, rgba(0,255,255,0.3), rgba(0,200,255,0.5));
             border-radius: 8px 0 0 8px;
-            border-right: 3px solid #0ff;
-            box-shadow: -4px 0 12px rgba(0,255,255,0.4);
+            border-right: 2px solid #0ff;
+            box-shadow: -2px 0 8px rgba(0,255,255,0.3);
             writing-mode: vertical-rl;
             text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #control-panel.collapsed .panel-content {
@@ -438,44 +438,46 @@
             border-top: 1px solid rgba(0, 255, 255, 0.2);
         }
 
-        /* Visuals Panel - Separate Menu - RESIZABLE */
+        /* REDESIGNED VISUALS PANEL - NO OVERLAP */
         #visuals-panel {
             position: fixed;
-            bottom: 20px;
-            left: 290px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 2px solid rgba(255, 0, 255, 0.6);
-            padding: 15px;
-            z-index: 100;
-            width: 300px;
-            max-height: 60vh;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.92);
+            border: 1px solid rgba(255, 0, 255, 0.5);
+            padding: 12px;
+            z-index: 99;
+            width: 280px;
+            max-height: calc(100vh - 320px);
             backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 8px 32px rgba(255, 0, 255, 0.15),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(255, 0, 255, 0.12);
+            border-radius: 8px;
             animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s ease;
             resize: both;
             overflow: auto;
             min-width: 250px;
-            min-height: 200px;
+            min-height: 150px;
         }
 
         #visuals-panel.collapsed {
-            width: auto;
-            height: auto;
-            min-width: auto;
-            min-height: auto;
-            left: 20px;
+            width: 120px;
+            height: 40px;
+            min-width: 120px;
+            min-height: 40px;
+            left: 10px;
             padding: 8px 12px;
             overflow: visible;
             resize: none;
             cursor: pointer;
-            z-index: 150;
-            background: linear-gradient(0deg, rgba(255,0,255,0.3), rgba(200,0,255,0.5));
+            z-index: 149;
+            background: linear-gradient(90deg, rgba(255,0,255,0.3), rgba(200,0,255,0.5));
             border-radius: 8px 8px 0 0;
-            border-top: 3px solid #f0f;
-            box-shadow: 0 -4px 12px rgba(255,0,255,0.4);
+            border-top: 2px solid #f0f;
+            box-shadow: 0 -2px 8px rgba(255,0,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #visuals-panel.collapsed .panel-content {
@@ -779,26 +781,26 @@
             transform: translateY(0);
         }
 
-        /* Panel Collapse Buttons */
+        /* Panel Collapse Buttons - ALWAYS VISIBLE */
         .panel-collapse-btn {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 30px;
-            height: 30px;
-            background: rgba(0, 255, 255, 0.3);
-            border: 2px solid rgba(0, 255, 255, 0.8);
-            border-radius: 50%;
+            top: 6px;
+            right: 6px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 255, 255, 0.4);
+            border: 1px solid rgba(0, 255, 255, 0.8);
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             color: #0ff;
             transition: all 0.2s;
-            z-index: 200;
-            box-shadow: 0 2px 8px rgba(0,255,255,0.5);
+            z-index: 201;
+            box-shadow: 0 1px 4px rgba(0,255,255,0.4);
         }
 
         .panel-collapse-btn:hover {
@@ -807,23 +809,29 @@
         }
 
         #visuals-panel .panel-collapse-btn {
-            background: rgba(255, 0, 255, 0.2);
-            border-color: rgba(255, 0, 255, 0.5);
+            background: rgba(255, 0, 255, 0.4);
+            border-color: rgba(255, 0, 255, 0.8);
             color: #f0f;
         }
 
         #visuals-panel .panel-collapse-btn:hover {
-            background: rgba(255, 0, 255, 0.4);
+            background: rgba(255, 0, 255, 0.5);
         }
 
-        .collapsed .panel-collapse-btn {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        #control-panel.collapsed .panel-collapse-btn {
+            position: static;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px 0 0 8px;
+            font-size: 20px;
         }
 
-        .collapsed .panel-collapse-btn:hover {
-            transform: translate(-50%, -50%) scale(1.1);
+        #visuals-panel.collapsed .panel-collapse-btn {
+            position: static;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px 8px 0 0;
+            font-size: 16px;
         }
 
         /* Tab labels - only show when collapsed */
@@ -842,33 +850,37 @@
         /* Mobile Responsive - Portrait Mode */
         @media (max-width: 768px) {
             #control-panel {
-                top: 60px;
-                right: 10px;
-                width: calc(100vw - 70px);
+                top: 50px;
+                right: 8px;
+                width: calc(100vw - 60px);
                 max-width: 280px;
-                max-height: calc(70vh - 60px);
+                max-height: calc(50vh - 50px);
             }
 
             #visuals-panel {
-                bottom: 10px;
-                left: 10px;
-                width: calc(100vw - 70px);
-                max-width: 250px;
-                max-height: 50vh;
+                bottom: 8px;
+                left: 8px;
+                width: calc(100vw - 60px);
+                max-width: 280px;
+                max-height: calc(40vh - 50px);
             }
 
-            #control-panel.collapsed,
+            #control-panel.collapsed {
+                width: 40px;
+                height: 120px;
+                right: 0;
+            }
+
             #visuals-panel.collapsed {
-                width: 45px;
-                height: 45px;
-                min-width: 45px;
-                min-height: 45px;
+                width: 100px;
+                height: 35px;
+                bottom: 0;
             }
 
             #top-bar {
-                height: 45px;
-                padding: 5px 10px;
-                gap: 8px;
+                height: 42px;
+                padding: 5px 8px;
+                gap: 6px;
             }
 
             #top-bar button {
@@ -878,78 +890,79 @@
         }
 
         @media (max-width: 480px) and (orientation: portrait) {
-            /* Top bar mobile optimization */
+            /* Top bar mobile optimization - COMPACT */
             #top-bar {
-                height: auto;
-                min-height: 50px;
-                padding: 8px;
-                flex-wrap: wrap;
-                gap: 6px;
+                height: 38px;
+                min-height: 38px;
+                padding: 4px 6px;
+                gap: 4px;
             }
 
             #top-bar button {
-                padding: 8px 12px;
-                font-size: 10px;
-                min-height: 44px;
-                flex: 1 1 auto;
+                padding: 6px 8px;
+                font-size: 9px;
+                min-height: 30px;
+                height: 30px;
             }
 
-            /* Control panel - right side, full height when expanded */
+            #top-bar .logo {
+                font-size: 10px;
+            }
+
+            /* Control panel - MOBILE OPTIMIZED */
             #control-panel {
-                top: 60px;
-                right: 5px;
-                width: calc(100vw - 15px);
-                max-width: 320px;
-                max-height: calc(100vh - 70px);
+                top: 42px;
+                right: 0;
+                width: calc(100vw - 50px);
+                max-width: 100%;
+                max-height: calc(55vh - 42px);
             }
 
             #control-panel.collapsed {
-                width: 50px;
-                height: 50px;
-                min-width: 50px;
-                min-height: 50px;
+                width: 35px;
+                height: 100px;
+                min-width: 35px;
+                min-height: 100px;
+                right: 0;
             }
 
-            /* Visuals panel - bottom, horizontal when expanded */
+            /* Visuals panel - MOBILE OPTIMIZED */
             #visuals-panel {
-                bottom: 5px;
-                left: 5px;
-                width: calc(100vw - 15px);
+                bottom: 0;
+                left: 0;
+                width: calc(100vw - 50px);
                 max-width: 100%;
-                max-height: 40vh;
+                max-height: calc(35vh - 10px);
             }
 
             #visuals-panel.collapsed {
-                width: 50px;
-                height: 50px;
-                min-width: 50px;
-                min-height: 50px;
-            }
-
-            /* Make all buttons touch-friendly */
-            button {
-                min-height: 44px;
-                font-size: 11px;
-            }
-
-            /* Bigger sliders for touch */
-            input[type="range"] {
+                width: 90px;
                 height: 32px;
+                min-width: 90px;
+                min-height: 32px;
+                bottom: 0;
+                left: 0;
             }
 
-            /* Collapsible section headers - touch friendly */
+            /* Touch-friendly controls */
+            button {
+                min-height: 40px;
+                font-size: 10px;
+            }
+
+            input[type="range"] {
+                height: 30px;
+            }
+
             .section-header {
-                padding: 12px;
-                min-height: 44px;
+                padding: 10px;
+                min-height: 40px;
             }
 
-            /* Panel collapse buttons - bigger touch target */
             .panel-collapse-btn {
-                width: 36px;
-                height: 36px;
-                font-size: 20px;
-                top: 7px;
-                right: 7px;
+                width: 28px;
+                height: 28px;
+                font-size: 16px;
             }
         }
     </style>
