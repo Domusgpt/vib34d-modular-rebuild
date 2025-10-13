@@ -630,18 +630,34 @@ void main() {
         this.gl.uniform1f(this.uniforms.time, time);
         this.gl.uniform2f(this.uniforms.mouse, this.mouseX, this.mouseY);
         this.gl.uniform1f(this.uniforms.geometry, this.params.geometry);
-        // 🎵 DIRECT AUDIO REACTIVITY - Simple and works
+        // 🎵 ENHANCED AUDIO REACTIVITY - MVEP-style with all parameters
         let gridDensity = this.params.gridDensity;
         let hue = this.params.hue;
         let intensity = this.params.intensity;
-        
+        let lineThickness = this.params.lineThickness || 0.02;
+        let moireScale = this.params.moireScale || 1.01;
+        let glitchIntensity = this.params.glitchIntensity || 0.05;
+
         if (window.audioEnabled && window.audioReactive) {
-            // Faceted audio mapping: Bass affects grid density, Mid affects hue, High affects intensity
-            gridDensity += window.audioReactive.bass * 30;  // Bass makes patterns denser
-            hue += window.audioReactive.mid * 60;           // Mid frequencies shift colors
-            intensity += window.audioReactive.high * 0.4;   // High frequencies brighten
+            // Bass: Grid density increase (hypercube-core pattern)
+            gridDensity = Math.max(0.1, gridDensity * (1.0 + window.audioReactive.bass * 0.7));
+
+            // Mid: Line thickness DECREASE (hypercube-core line 385 pattern)
+            lineThickness = Math.max(0.002, lineThickness * (1.0 - window.audioReactive.mid * 0.6));
+
+            // Mid: Hue shift
+            hue += window.audioReactive.mid * 60;
+
+            // High: Glitch intensity boost (mvep-moire line 304 pattern)
+            glitchIntensity += window.audioReactive.high * 0.1;
+
+            // High: Intensity brighten
+            intensity += window.audioReactive.high * 0.4;
+
+            // Bass: Moiré scale variation (subtle interference pattern changes)
+            moireScale += window.audioReactive.bass * 0.02;
         }
-        
+
         this.gl.uniform1f(this.uniforms.gridDensity, Math.min(100, gridDensity));
         this.gl.uniform1f(this.uniforms.morphFactor, this.params.morphFactor);
         this.gl.uniform1f(this.uniforms.chaos, this.params.chaos);
@@ -657,10 +673,10 @@ void main() {
         this.gl.uniform1f(this.uniforms.clickIntensity, this.clickIntensity);
         this.gl.uniform1f(this.uniforms.roleIntensity, roleIntensities[this.role] || 1.0);
 
-        // MVEP-style audio reactivity parameters
-        this.gl.uniform1f(this.uniforms.moireScale, this.params.moireScale || 1.01);
-        this.gl.uniform1f(this.uniforms.glitchIntensity, this.params.glitchIntensity || 0.05);
-        this.gl.uniform1f(this.uniforms.lineThickness, this.params.lineThickness || 0.02);
+        // MVEP-style audio-reactive parameters
+        this.gl.uniform1f(this.uniforms.moireScale, moireScale);
+        this.gl.uniform1f(this.uniforms.glitchIntensity, Math.min(1.0, glitchIntensity));
+        this.gl.uniform1f(this.uniforms.lineThickness, lineThickness);
 
         try {
             this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
