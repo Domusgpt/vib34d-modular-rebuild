@@ -9,13 +9,13 @@ export class ParameterManager {
         this.params = {
             // Current variation
             variation: 0,
-            
+
             // 4D Polytopal Mathematics
             rot4dXW: 0.0,      // X-W plane rotation (-2 to 2)
-            rot4dYW: 0.0,      // Y-W plane rotation (-2 to 2) 
+            rot4dYW: 0.0,      // Y-W plane rotation (-2 to 2)
             rot4dZW: 0.0,      // Z-W plane rotation (-2 to 2)
             dimension: 3.5,    // Dimensional level (3.0 to 4.5)
-            
+
             // Holographic Visualization
             gridDensity: 15,   // Geometric detail (4 to 30)
             morphFactor: 1.0,  // Shape transformation (0 to 2)
@@ -24,7 +24,12 @@ export class ParameterManager {
             hue: 200,          // Color rotation (0 to 360)
             intensity: 0.5,    // Visual intensity (0 to 1)
             saturation: 0.8,   // Color saturation (0 to 1)
-            
+
+            // MVEP-style audio reactivity enhancements
+            moireScale: 1.01,          // Moiré interference pattern (0.95-1.05)
+            glitchIntensity: 0.05,     // RGB color splitting (0-0.2)
+            lineThickness: 0.02,       // Grid line thickness (0.01-0.1)
+
             // Geometry selection
             geometry: 0        // Current geometry type (0-7)
         };
@@ -43,6 +48,9 @@ export class ParameterManager {
             hue: { min: 0, max: 360, step: 1, type: 'int' },
             intensity: { min: 0, max: 1, step: 0.01, type: 'float' },
             saturation: { min: 0, max: 1, step: 0.01, type: 'float' },
+            moireScale: { min: 0.95, max: 1.05, step: 0.001, type: 'float' },
+            glitchIntensity: { min: 0, max: 0.2, step: 0.001, type: 'float' },
+            lineThickness: { min: 0.001, max: 0.1, step: 0.001, type: 'float' },
             geometry: { min: 0, max: 7, step: 1, type: 'int' }
         };
         
