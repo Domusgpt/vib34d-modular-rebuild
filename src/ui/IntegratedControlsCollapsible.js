@@ -43,30 +43,44 @@ export class IntegratedControlsCollapsible {
         // Attach section listeners
         this.sections.forEach(section => section.attachListeners(panel));
 
-        // Attach collapse button listener
+        // Attach collapse/expand handlers
         const collapseBtn = panel.querySelector('.panel-collapse-btn');
-        collapseBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            panel.classList.toggle('collapsed');
-            collapseBtn.textContent = panel.classList.contains('collapsed') ? '+' : '−';
-            // Save state to localStorage
-            localStorage.setItem('controlPanelCollapsed', panel.classList.contains('collapsed'));
-        });
 
-        // Restore collapsed state from localStorage
-        if (localStorage.getItem('controlPanelCollapsed') === 'true') {
-            panel.classList.add('collapsed');
-            collapseBtn.textContent = '+';
-        }
+        const toggleCollapse = (e) => {
+            if (e) e.stopPropagation();
+            const isCollapsed = panel.classList.contains('collapsed');
 
-        // Click on collapsed panel to expand
-        panel.addEventListener('click', () => {
-            if (panel.classList.contains('collapsed')) {
+            if (isCollapsed) {
+                // Expand
                 panel.classList.remove('collapsed');
                 collapseBtn.textContent = '−';
                 localStorage.setItem('controlPanelCollapsed', 'false');
+            } else {
+                // Collapse
+                panel.classList.add('collapsed');
+                collapseBtn.textContent = '+';
+                localStorage.setItem('controlPanelCollapsed', 'true');
+            }
+        };
+
+        // Click button to toggle
+        collapseBtn.addEventListener('click', toggleCollapse);
+
+        // Click anywhere on collapsed panel to expand
+        panel.addEventListener('click', (e) => {
+            if (panel.classList.contains('collapsed')) {
+                toggleCollapse(e);
             }
         });
+
+        // Restore collapsed state from localStorage (or default to expanded on desktop)
+        const savedState = localStorage.getItem('controlPanelCollapsed');
+        const isMobile = window.innerWidth <= 480 && window.matchMedia('(orientation: portrait)').matches;
+
+        if (savedState === 'true' || (savedState === null && isMobile)) {
+            panel.classList.add('collapsed');
+            collapseBtn.textContent = '+';
+        }
     }
 
     renderCoreParameters() {
