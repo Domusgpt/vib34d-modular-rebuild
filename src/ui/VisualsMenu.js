@@ -61,8 +61,29 @@ export class VisualsMenu {
                     <span id="visual-saturation-val">${p.saturation.toFixed(2)}</span>
                 </div>
             </div>
+            <div class="control-group">
+                <label>Moiré Scale</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-moire" min="0.95" max="1.05" step="0.001" value="${p.moireScale}">
+                    <span id="visual-moire-val">${p.moireScale.toFixed(3)}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Glitch Intensity</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-glitch" min="0" max="0.2" step="0.01" value="${p.glitchIntensity}">
+                    <span id="visual-glitch-val">${p.glitchIntensity.toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Line Thickness</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-line" min="0.01" max="0.1" step="0.005" value="${p.lineThickness}">
+                    <span id="visual-line-val">${p.lineThickness.toFixed(3)}</span>
+                </div>
+            </div>
             <div style="font-size: 9px; opacity: 0.7; margin-top: 10px;">
-                💡 Control color and visual appearance
+                💡 Color, moiré, glitch, and line rendering
             </div>
         `;
     }
@@ -83,22 +104,25 @@ export class VisualsMenu {
     setupVisualControls() {
         // Color parameter controls
         const colorParams = [
-            { id: 'hue', param: 'hue' },
-            { id: 'intensity', param: 'intensity' },
-            { id: 'saturation', param: 'saturation' }
+            { id: 'hue', param: 'hue', decimals: 0, suffix: '°' },
+            { id: 'intensity', param: 'intensity', decimals: 2 },
+            { id: 'saturation', param: 'saturation', decimals: 2 },
+            { id: 'moire', param: 'moireScale', decimals: 3 },
+            { id: 'glitch', param: 'glitchIntensity', decimals: 2 },
+            { id: 'line', param: 'lineThickness', decimals: 3 }
         ];
 
-        colorParams.forEach(({ id, param }) => {
+        colorParams.forEach(({ id, param, decimals, suffix }) => {
             const slider = document.getElementById(`visual-${id}`);
             const valueDisplay = document.getElementById(`visual-${id}-val`);
             if (!slider || !valueDisplay) return;
 
             slider.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
-                if (id === 'hue') {
-                    valueDisplay.textContent = `${value}°`;
+                if (decimals === 0) {
+                    valueDisplay.textContent = `${value}${suffix || ''}`;
                 } else {
-                    valueDisplay.textContent = value.toFixed(2);
+                    valueDisplay.textContent = value.toFixed(decimals) + (suffix || '');
                 }
                 this.choreographer.setParameter(param, value);
             });
@@ -132,10 +156,16 @@ export class VisualsMenu {
             const hueVal = document.getElementById('visual-hue-val');
             const intensityVal = document.getElementById('visual-intensity-val');
             const saturationVal = document.getElementById('visual-saturation-val');
+            const moireVal = document.getElementById('visual-moire-val');
+            const glitchVal = document.getElementById('visual-glitch-val');
+            const lineVal = document.getElementById('visual-line-val');
 
             if (hueVal) hueVal.textContent = `${p.hue}°`;
             if (intensityVal) intensityVal.textContent = p.intensity.toFixed(2);
             if (saturationVal) saturationVal.textContent = p.saturation.toFixed(2);
+            if (moireVal) moireVal.textContent = p.moireScale.toFixed(3);
+            if (glitchVal) glitchVal.textContent = p.glitchIntensity.toFixed(2);
+            if (lineVal) lineVal.textContent = p.lineThickness.toFixed(3);
         }, 100);
     }
 }

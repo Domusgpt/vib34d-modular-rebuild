@@ -42,7 +42,12 @@ export class Choreographer {
             saturation: 0.8,
             rot4dXW: 0.0,
             rot4dYW: 0.0,
-            rot4dZW: 0.0
+            rot4dZW: 0.0,
+
+            // MVEP-style audio reactivity enhancements
+            moireScale: 1.01,           // Moiré interference pattern (0.95-1.05)
+            glitchIntensity: 0.05,      // RGB color splitting (0-0.2)
+            lineThickness: 0.02         // Grid line thickness (0.01-0.1)
         };
 
         // Audio system
@@ -50,6 +55,7 @@ export class Choreographer {
         this.audioElement = null;
         this.audioReactive = true;
         this.reactivityStrength = 0.5;
+        this.extremeMode = false;  // 5x audio reactivity multiplier
 
         // Timeline
         this.sequences = [];

@@ -175,14 +175,25 @@ export class AudioAnalyzer {
     }
 
     /**
-     * Get current audio data for external use (e.g., color palette frequency-map)
+     * Get current audio data for external use (e.g., color palette frequency-map, shader uniforms)
+     * Enhanced with MVEP-style frequency data for WebGL shaders
      */
     getAudioData() {
         return {
+            // Smoothed momentum values (good for choreography)
             bass: this.energyMomentum.bass,
             mid: this.energyMomentum.mid,
             high: this.energyMomentum.high,
+
+            // Peak values (good for extreme effects)
+            bassPeak: this.peakDetector.bass,
+            midPeak: this.peakDetector.mid,
+            highPeak: this.peakDetector.high,
+
+            // Combined energy and rhythm
+            energy: this.peakDetector.energy,
             beatPhase: this.beatPhase,
+            rhythmicPulse: this.rhythmicPulse,
             isBeat: (performance.now() - this.lastBeatTime) < 100 // Beat happened in last 100ms
         };
     }

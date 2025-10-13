@@ -130,6 +130,14 @@ export class IntegratedControlsCollapsible {
                     <option value="minimal" ${this.choreographer.choreographyMode === 'minimal' ? 'selected' : ''}>Minimal</option>
                 </select>
             </div>
+            <div class="control-group">
+                <button id="toggle-extreme-mode" style="width: 100%; margin-top: 10px; background: ${this.choreographer.extremeMode ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 255, 0.1)'}; border: 1px solid ${this.choreographer.extremeMode ? '#f00' : '#0ff'}; color: ${this.choreographer.extremeMode ? '#f00' : '#0ff'};">
+                    ${this.choreographer.extremeMode ? '🔥 EXTREME MODE: ON' : '⚡ EXTREME MODE: OFF'}
+                </button>
+                <div style="font-size: 9px; opacity: 0.7; margin-top: 5px;">
+                    5x audio reactivity multiplier
+                </div>
+            </div>
         `;
     }
 
@@ -200,6 +208,19 @@ export class IntegratedControlsCollapsible {
         if (modeSelect) {
             modeSelect.addEventListener('change', (e) => {
                 this.choreographer.choreographyMode = e.target.value;
+            });
+        }
+
+        // Extreme mode toggle
+        const extremeBtn = document.getElementById('toggle-extreme-mode');
+        if (extremeBtn) {
+            extremeBtn.addEventListener('click', () => {
+                this.choreographer.extremeMode = !this.choreographer.extremeMode;
+                extremeBtn.textContent = this.choreographer.extremeMode ? '🔥 EXTREME MODE: ON' : '⚡ EXTREME MODE: OFF';
+                extremeBtn.style.background = this.choreographer.extremeMode ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 255, 0.1)';
+                extremeBtn.style.borderColor = this.choreographer.extremeMode ? '#f00' : '#0ff';
+                extremeBtn.style.color = this.choreographer.extremeMode ? '#f00' : '#0ff';
+                console.log(`🔥 Extreme mode: ${this.choreographer.extremeMode ? 'ON (5x multiplier)' : 'OFF'}`);
             });
         }
     }
