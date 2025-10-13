@@ -125,15 +125,25 @@
                         inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            /* ALWAYS VISIBLE - RESIZABLE */
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateX(0);
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             resize: both;
             overflow: auto;
             min-width: 280px;
             min-height: 200px;
+        }
+
+        #control-panel.collapsed {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            min-height: 50px;
+            padding: 0;
+            overflow: hidden;
+            resize: none;
+        }
+
+        #control-panel.collapsed .panel-content {
+            display: none;
         }
 
         #control-panel::-webkit-resizer {
@@ -428,11 +438,26 @@
                         inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-            /* ALWAYS VISIBLE - RESIZABLE */
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             resize: both;
             overflow: auto;
             min-width: 250px;
             min-height: 200px;
+        }
+
+        #visuals-panel.collapsed {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            min-height: 50px;
+            left: 20px;
+            padding: 0;
+            overflow: hidden;
+            resize: none;
+        }
+
+        #visuals-panel.collapsed .panel-content {
+            display: none;
         }
 
         #visuals-panel::-webkit-resizer {
@@ -722,6 +747,122 @@
 
         .viz-tab:active {
             transform: translateY(0);
+        }
+
+        /* Panel Collapse Buttons */
+        .panel-collapse-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            color: #0ff;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .panel-collapse-btn:hover {
+            background: rgba(0, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        #visuals-panel .panel-collapse-btn {
+            background: rgba(255, 0, 255, 0.2);
+            border-color: rgba(255, 0, 255, 0.5);
+            color: #f0f;
+        }
+
+        #visuals-panel .panel-collapse-btn:hover {
+            background: rgba(255, 0, 255, 0.4);
+        }
+
+        .collapsed .panel-collapse-btn {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .collapsed .panel-collapse-btn:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* Mobile Responsive - Portrait Mode */
+        @media (max-width: 768px) {
+            #control-panel {
+                top: 60px;
+                right: 10px;
+                width: calc(100vw - 70px);
+                max-width: 280px;
+                max-height: calc(70vh - 60px);
+            }
+
+            #visuals-panel {
+                bottom: 10px;
+                left: 10px;
+                width: calc(100vw - 70px);
+                max-width: 250px;
+                max-height: 50vh;
+            }
+
+            #control-panel.collapsed,
+            #visuals-panel.collapsed {
+                width: 45px;
+                height: 45px;
+                min-width: 45px;
+                min-height: 45px;
+            }
+
+            #top-bar {
+                height: 45px;
+                padding: 5px 10px;
+                gap: 8px;
+            }
+
+            #top-bar button {
+                padding: 6px 10px;
+                font-size: 9px;
+            }
+        }
+
+        @media (max-width: 480px) and (orientation: portrait) {
+            /* Start collapsed on mobile portrait */
+            #control-panel,
+            #visuals-panel {
+                width: 45px;
+                height: 45px;
+                min-width: 45px;
+                min-height: 45px;
+                padding: 0;
+                overflow: hidden;
+                resize: none;
+            }
+
+            #control-panel .panel-content,
+            #visuals-panel .panel-content {
+                display: none;
+            }
+
+            #control-panel {
+                top: 55px;
+                right: 5px;
+            }
+
+            #visuals-panel {
+                bottom: 5px;
+                left: 5px;
+            }
+
+            #top-bar {
+                height: 40px;
+            }
         }
     </style>
 </head>

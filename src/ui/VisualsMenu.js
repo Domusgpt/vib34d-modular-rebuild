@@ -30,11 +30,42 @@ export class VisualsMenu {
             new CollapsibleSection('system-selection', '🌐 SYSTEM SELECTION', this.renderSystemSelection(), false)
         ];
 
-        // Render all sections
-        panel.innerHTML = '<h2>🎨 VISUALS</h2>' + this.sections.map(s => s.render()).join('');
+        // Render with collapse button and panel-content wrapper
+        panel.innerHTML = `
+            <div class="panel-collapse-btn" title="Collapse Panel">−</div>
+            <div class="panel-content">
+                <h2>🎨 VISUALS</h2>
+                ${this.sections.map(s => s.render()).join('')}
+            </div>
+        `;
 
-        // Attach listeners
+        // Attach section listeners
         this.sections.forEach(section => section.attachListeners(panel));
+
+        // Attach collapse button listener
+        const collapseBtn = panel.querySelector('.panel-collapse-btn');
+        collapseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            panel.classList.toggle('collapsed');
+            collapseBtn.textContent = panel.classList.contains('collapsed') ? '+' : '−';
+            // Save state to localStorage
+            localStorage.setItem('visualsPanelCollapsed', panel.classList.contains('collapsed'));
+        });
+
+        // Restore collapsed state from localStorage
+        if (localStorage.getItem('visualsPanelCollapsed') === 'true') {
+            panel.classList.add('collapsed');
+            collapseBtn.textContent = '+';
+        }
+
+        // Click on collapsed panel to expand
+        panel.addEventListener('click', () => {
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                collapseBtn.textContent = '−';
+                localStorage.setItem('visualsPanelCollapsed', 'false');
+            }
+        });
     }
 
     renderColorControls() {
