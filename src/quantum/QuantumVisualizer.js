@@ -283,13 +283,13 @@ vec3 project4Dto3D(vec4 p) {
     return vec3(p.x * w, p.y * w, p.z * w);
 }
 
-// MVEP-style moiré pattern function
+// MVEP-style moiré pattern function - NOW USES u_moireScale
 float moirePattern(vec2 uv, float intensity) {
-    float freq1 = 12.0 + intensity * 6.0;
-    float freq2 = 14.0 + intensity * 8.0;
+    float freq1 = 12.0 * u_moireScale + intensity * 6.0;
+    float freq2 = 14.0 * u_moireScale + intensity * 8.0;
     float pattern1 = sin(uv.x * freq1) * sin(uv.y * freq1);
     float pattern2 = sin(uv.x * freq2) * sin(uv.y * freq2);
-    return (pattern1 * pattern2) * intensity * 0.15;
+    return (pattern1 * pattern2) * intensity * 0.2 * u_moireScale;
 }
 
 // MVEP-style RGB color splitting glitch
@@ -555,7 +555,10 @@ void main() {
     
     // Calculate enhanced geometry value
     float value = geometryFunction(pos);
-    
+
+    // Apply line thickness - makes geometry edges thicker or thinner
+    value = value / u_lineThickness;
+
     // Enhanced chaos with holographic effects
     float noise = sin(pos.x * 7.0) * cos(pos.y * 11.0) * sin(pos.z * 13.0);
     value += noise * u_chaos;
