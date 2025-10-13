@@ -31,9 +31,10 @@ export class IntegratedControlsCollapsible {
             new CollapsibleSection('audio', '🔊 AUDIO REACTIVITY', this.renderAudioControls(), true)
         ];
 
-        // Render with collapse button and panel-content wrapper
+        // Render with collapse button, tab label, and panel-content wrapper
         panel.innerHTML = `
             <div class="panel-collapse-btn" title="Collapse Panel">−</div>
+            <div class="panel-tab-label">🎛️ CONTROLS</div>
             <div class="panel-content">
                 <h2>🎛️ CONTROLS</h2>
                 ${this.sections.map(s => s.render()).join('')}

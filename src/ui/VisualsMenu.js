@@ -30,9 +30,10 @@ export class VisualsMenu {
             new CollapsibleSection('system-selection', '🌐 SYSTEM SELECTION', this.renderSystemSelection(), false)
         ];
 
-        // Render with collapse button and panel-content wrapper
+        // Render with collapse button, tab label, and panel-content wrapper
         panel.innerHTML = `
             <div class="panel-collapse-btn" title="Collapse Panel">−</div>
+            <div class="panel-tab-label">🎨 VISUALS</div>
             <div class="panel-content">
                 <h2>🎨 VISUALS</h2>
                 ${this.sections.map(s => s.render()).join('')}

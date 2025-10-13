@@ -133,15 +133,21 @@
         }
 
         #control-panel.collapsed {
-            width: 50px;
-            height: 50px;
-            min-width: 50px;
-            min-height: 50px;
-            padding: 0;
-            overflow: hidden;
+            width: auto;
+            height: auto;
+            min-width: auto;
+            min-height: auto;
+            padding: 12px 8px;
+            overflow: visible;
             resize: none;
             cursor: pointer;
             z-index: 150;
+            background: linear-gradient(90deg, rgba(0,255,255,0.3), rgba(0,200,255,0.5));
+            border-radius: 8px 0 0 8px;
+            border-right: 3px solid #0ff;
+            box-shadow: -4px 0 12px rgba(0,255,255,0.4);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
         }
 
         #control-panel.collapsed .panel-content {
@@ -149,7 +155,7 @@
         }
 
         #control-panel.collapsed .panel-collapse-btn {
-            pointer-events: none;
+            display: none;
         }
 
         #control-panel::-webkit-resizer {
@@ -452,16 +458,20 @@
         }
 
         #visuals-panel.collapsed {
-            width: 50px;
-            height: 50px;
-            min-width: 50px;
-            min-height: 50px;
+            width: auto;
+            height: auto;
+            min-width: auto;
+            min-height: auto;
             left: 20px;
-            padding: 0;
-            overflow: hidden;
+            padding: 8px 12px;
+            overflow: visible;
             resize: none;
             cursor: pointer;
             z-index: 150;
+            background: linear-gradient(0deg, rgba(255,0,255,0.3), rgba(200,0,255,0.5));
+            border-radius: 8px 8px 0 0;
+            border-top: 3px solid #f0f;
+            box-shadow: 0 -4px 12px rgba(255,0,255,0.4);
         }
 
         #visuals-panel.collapsed .panel-content {
@@ -469,7 +479,7 @@
         }
 
         #visuals-panel.collapsed .panel-collapse-btn {
-            pointer-events: none;
+            display: none;
         }
 
         #visuals-panel::-webkit-resizer {
@@ -804,6 +814,19 @@
 
         .collapsed .panel-collapse-btn:hover {
             transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* Tab labels - only show when collapsed */
+        .panel-tab-label {
+            display: none;
+        }
+
+        .collapsed .panel-tab-label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px currentColor;
         }
 
         /* Mobile Responsive - Portrait Mode */
