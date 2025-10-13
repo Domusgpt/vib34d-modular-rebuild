@@ -140,10 +140,16 @@
             padding: 0;
             overflow: hidden;
             resize: none;
+            cursor: pointer;
+            z-index: 150;
         }
 
         #control-panel.collapsed .panel-content {
             display: none;
+        }
+
+        #control-panel.collapsed .panel-collapse-btn {
+            pointer-events: none;
         }
 
         #control-panel::-webkit-resizer {
@@ -454,10 +460,16 @@
             padding: 0;
             overflow: hidden;
             resize: none;
+            cursor: pointer;
+            z-index: 150;
         }
 
         #visuals-panel.collapsed .panel-content {
             display: none;
+        }
+
+        #visuals-panel.collapsed .panel-collapse-btn {
+            pointer-events: none;
         }
 
         #visuals-panel::-webkit-resizer {
@@ -833,23 +845,6 @@
         }
 
         @media (max-width: 480px) and (orientation: portrait) {
-            /* Start collapsed on mobile portrait */
-            #control-panel,
-            #visuals-panel {
-                width: 45px;
-                height: 45px;
-                min-width: 45px;
-                min-height: 45px;
-                padding: 0;
-                overflow: hidden;
-                resize: none;
-            }
-
-            #control-panel .panel-content,
-            #visuals-panel .panel-content {
-                display: none;
-            }
-
             #control-panel {
                 top: 55px;
                 right: 5px;
@@ -860,8 +855,22 @@
                 left: 5px;
             }
 
+            #control-panel.collapsed,
+            #visuals-panel.collapsed {
+                width: 45px;
+                height: 45px;
+                min-width: 45px;
+                min-height: 45px;
+            }
+
             #top-bar {
                 height: 40px;
+                padding: 5px 8px;
+            }
+
+            #top-bar button {
+                padding: 5px 8px;
+                font-size: 8px;
             }
         }
     </style>
