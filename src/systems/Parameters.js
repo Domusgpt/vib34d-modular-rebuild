@@ -48,9 +48,9 @@ export class ParameterManager {
             hue: { min: 0, max: 360, step: 1, type: 'int' },
             intensity: { min: 0, max: 1, step: 0.01, type: 'float' },
             saturation: { min: 0, max: 1, step: 0.01, type: 'float' },
-            moireScale: { min: 0.95, max: 1.05, step: 0.001, type: 'float' },
-            glitchIntensity: { min: 0, max: 0.2, step: 0.001, type: 'float' },
-            lineThickness: { min: 0.001, max: 0.1, step: 0.001, type: 'float' },
+            moireScale: { min: 0, max: 5, step: 0.01, type: 'float' },
+            glitchIntensity: { min: 0, max: 1, step: 0.01, type: 'float' },
+            lineThickness: { min: 0.001, max: 5, step: 0.01, type: 'float' },
             geometry: { min: 0, max: 7, step: 1, type: 'int' }
         };
         
