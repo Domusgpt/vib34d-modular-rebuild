@@ -24,9 +24,12 @@ export class VisualsMenu {
         const panel = document.getElementById('visuals-panel');
         if (!panel) return;
 
-        // Create sections for visuals
+        // Create sections for visuals - ALL VISUAL PARAMETERS
         this.sections = [
-            new CollapsibleSection('color-controls', '🎨 COLOR CONTROLS', this.renderColorControls(), true),
+            new CollapsibleSection('geometry-controls', '🔷 GEOMETRY', this.renderGeometryControls(), false),
+            new CollapsibleSection('4d-projection', '🔄 4D PROJECTION', this.render4DProjection(), false),
+            new CollapsibleSection('visual-morphing', '✨ VISUAL MORPHING', this.renderVisualMorphing(), false),
+            new CollapsibleSection('color-controls', '🎨 COLOR CONTROLS', this.renderColorControls(), false),
             new CollapsibleSection('system-selection', '🌐 SYSTEM SELECTION', this.renderSystemSelection(), false)
         ];
 
@@ -81,6 +84,89 @@ export class VisualsMenu {
             panel.classList.add('collapsed');
             collapseBtn.textContent = '+';
         }
+    }
+
+    renderGeometryControls() {
+        const p = this.choreographer.baseParams;
+        return `
+            <div class="control-group">
+                <label>Geometry Type (1-24)</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-geometry" min="1" max="24" step="1" value="${p.geometry}">
+                    <span id="visual-geometry-val">${p.geometry}</span>
+                </div>
+            </div>
+            <div style="font-size: 9px; opacity: 0.7; margin-top: 5px;">
+                💠 Tesseract, 24-cell, 120-cell, 600-cell, etc.
+            </div>
+        `;
+    }
+
+    render4DProjection() {
+        const p = this.choreographer.baseParams;
+        return `
+            <div style="font-size: 9px; opacity: 0.7; margin-bottom: 10px;">
+                4D hyperspace rotation angles
+            </div>
+            <div class="control-group">
+                <label>XW Plane Rotation</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-rot4dXW" min="-3.14159" max="3.14159" step="0.01" value="${p.rot4dXW}">
+                    <span id="visual-rot4dXW-val">${p.rot4dXW.toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>YW Plane Rotation</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-rot4dYW" min="-3.14159" max="3.14159" step="0.01" value="${p.rot4dYW}">
+                    <span id="visual-rot4dYW-val">${p.rot4dYW.toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>ZW Plane Rotation</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-rot4dZW" min="-3.14159" max="3.14159" step="0.01" value="${p.rot4dZW}">
+                    <span id="visual-rot4dZW-val">${p.rot4dZW.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    renderVisualMorphing() {
+        const p = this.choreographer.baseParams;
+        return `
+            <div class="control-group">
+                <label>Grid Density (1-100)</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-gridDensity" min="1" max="100" step="1" value="${p.gridDensity}">
+                    <span id="visual-gridDensity-val">${p.gridDensity}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Morph Factor (0-5)</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-morphFactor" min="0" max="5" step="0.01" value="${p.morphFactor}">
+                    <span id="visual-morphFactor-val">${p.morphFactor.toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Chaos (0-3)</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-chaos" min="0" max="3" step="0.01" value="${p.chaos}">
+                    <span id="visual-chaos-val">${p.chaos.toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Speed (0.1-10)</label>
+                <div class="slider-row">
+                    <input type="range" id="visual-speed" min="0.1" max="10" step="0.1" value="${p.speed}">
+                    <span id="visual-speed-val">${p.speed.toFixed(1)}</span>
+                </div>
+            </div>
+            <div style="font-size: 9px; opacity: 0.7; margin-top: 10px;">
+                ✨ Shape transformation and animation
+            </div>
+        `;
     }
 
     renderColorControls() {
@@ -148,8 +234,20 @@ export class VisualsMenu {
     }
 
     setupVisualControls() {
-        // Color parameter controls
-        const colorParams = [
+        // ALL Visual parameter controls
+        const allVisualParams = [
+            // Geometry
+            { id: 'geometry', param: 'geometry', decimals: 0 },
+            // 4D Projection
+            { id: 'rot4dXW', param: 'rot4dXW', decimals: 2 },
+            { id: 'rot4dYW', param: 'rot4dYW', decimals: 2 },
+            { id: 'rot4dZW', param: 'rot4dZW', decimals: 2 },
+            // Visual Morphing
+            { id: 'gridDensity', param: 'gridDensity', decimals: 0 },
+            { id: 'morphFactor', param: 'morphFactor', decimals: 2 },
+            { id: 'chaos', param: 'chaos', decimals: 2 },
+            { id: 'speed', param: 'speed', decimals: 1 },
+            // Color Controls
             { id: 'hue', param: 'hue', decimals: 0, suffix: '°' },
             { id: 'intensity', param: 'intensity', decimals: 2 },
             { id: 'saturation', param: 'saturation', decimals: 2 },
@@ -158,7 +256,7 @@ export class VisualsMenu {
             { id: 'line', param: 'lineThickness', decimals: 3 }
         ];
 
-        colorParams.forEach(({ id, param, decimals, suffix }) => {
+        allVisualParams.forEach(({ id, param, decimals, suffix }) => {
             const slider = document.getElementById(`visual-${id}`);
             const valueDisplay = document.getElementById(`visual-${id}-val`);
             if (!slider || !valueDisplay) return;
@@ -195,23 +293,111 @@ export class VisualsMenu {
     }
 
     setupUpdateLoop() {
-        // Update value displays periodically
+        // Update ALL visual parameter displays periodically
         setInterval(() => {
             const p = this.choreographer.baseParams;
 
-            const hueVal = document.getElementById('visual-hue-val');
-            const intensityVal = document.getElementById('visual-intensity-val');
-            const saturationVal = document.getElementById('visual-saturation-val');
-            const moireVal = document.getElementById('visual-moire-val');
-            const glitchVal = document.getElementById('visual-glitch-val');
-            const lineVal = document.getElementById('visual-line-val');
+            // Geometry
+            const geometryVal = document.getElementById('visual-geometry-val');
+            const geometrySlider = document.getElementById('visual-geometry');
+            if (geometryVal && geometrySlider) {
+                geometryVal.textContent = p.geometry;
+                geometrySlider.value = p.geometry;
+            }
 
-            if (hueVal) hueVal.textContent = `${p.hue}°`;
-            if (intensityVal) intensityVal.textContent = p.intensity.toFixed(2);
-            if (saturationVal) saturationVal.textContent = p.saturation.toFixed(2);
-            if (moireVal) moireVal.textContent = p.moireScale.toFixed(3);
-            if (glitchVal) glitchVal.textContent = p.glitchIntensity.toFixed(2);
-            if (lineVal) lineVal.textContent = p.lineThickness.toFixed(3);
+            // 4D Projection
+            const rot4dXWVal = document.getElementById('visual-rot4dXW-val');
+            const rot4dXWSlider = document.getElementById('visual-rot4dXW');
+            if (rot4dXWVal && rot4dXWSlider) {
+                rot4dXWVal.textContent = p.rot4dXW.toFixed(2);
+                rot4dXWSlider.value = p.rot4dXW;
+            }
+
+            const rot4dYWVal = document.getElementById('visual-rot4dYW-val');
+            const rot4dYWSlider = document.getElementById('visual-rot4dYW');
+            if (rot4dYWVal && rot4dYWSlider) {
+                rot4dYWVal.textContent = p.rot4dYW.toFixed(2);
+                rot4dYWSlider.value = p.rot4dYW;
+            }
+
+            const rot4dZWVal = document.getElementById('visual-rot4dZW-val');
+            const rot4dZWSlider = document.getElementById('visual-rot4dZW');
+            if (rot4dZWVal && rot4dZWSlider) {
+                rot4dZWVal.textContent = p.rot4dZW.toFixed(2);
+                rot4dZWSlider.value = p.rot4dZW;
+            }
+
+            // Visual Morphing
+            const gridDensityVal = document.getElementById('visual-gridDensity-val');
+            const gridDensitySlider = document.getElementById('visual-gridDensity');
+            if (gridDensityVal && gridDensitySlider) {
+                gridDensityVal.textContent = p.gridDensity;
+                gridDensitySlider.value = p.gridDensity;
+            }
+
+            const morphFactorVal = document.getElementById('visual-morphFactor-val');
+            const morphFactorSlider = document.getElementById('visual-morphFactor');
+            if (morphFactorVal && morphFactorSlider) {
+                morphFactorVal.textContent = p.morphFactor.toFixed(2);
+                morphFactorSlider.value = p.morphFactor;
+            }
+
+            const chaosVal = document.getElementById('visual-chaos-val');
+            const chaosSlider = document.getElementById('visual-chaos');
+            if (chaosVal && chaosSlider) {
+                chaosVal.textContent = p.chaos.toFixed(2);
+                chaosSlider.value = p.chaos;
+            }
+
+            const speedVal = document.getElementById('visual-speed-val');
+            const speedSlider = document.getElementById('visual-speed');
+            if (speedVal && speedSlider) {
+                speedVal.textContent = p.speed.toFixed(1);
+                speedSlider.value = p.speed;
+            }
+
+            // Color Controls
+            const hueVal = document.getElementById('visual-hue-val');
+            const hueSlider = document.getElementById('visual-hue');
+            if (hueVal && hueSlider) {
+                hueVal.textContent = `${p.hue}°`;
+                hueSlider.value = p.hue;
+            }
+
+            const intensityVal = document.getElementById('visual-intensity-val');
+            const intensitySlider = document.getElementById('visual-intensity');
+            if (intensityVal && intensitySlider) {
+                intensityVal.textContent = p.intensity.toFixed(2);
+                intensitySlider.value = p.intensity;
+            }
+
+            const saturationVal = document.getElementById('visual-saturation-val');
+            const saturationSlider = document.getElementById('visual-saturation');
+            if (saturationVal && saturationSlider) {
+                saturationVal.textContent = p.saturation.toFixed(2);
+                saturationSlider.value = p.saturation;
+            }
+
+            const moireVal = document.getElementById('visual-moire-val');
+            const moireSlider = document.getElementById('visual-moire');
+            if (moireVal && moireSlider) {
+                moireVal.textContent = p.moireScale.toFixed(3);
+                moireSlider.value = p.moireScale;
+            }
+
+            const glitchVal = document.getElementById('visual-glitch-val');
+            const glitchSlider = document.getElementById('visual-glitch');
+            if (glitchVal && glitchSlider) {
+                glitchVal.textContent = p.glitchIntensity.toFixed(2);
+                glitchSlider.value = p.glitchIntensity;
+            }
+
+            const lineVal = document.getElementById('visual-line-val');
+            const lineSlider = document.getElementById('visual-line');
+            if (lineVal && lineSlider) {
+                lineVal.textContent = p.lineThickness.toFixed(3);
+                lineSlider.value = p.lineThickness;
+            }
         }, 100);
     }
 }
