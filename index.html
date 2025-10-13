@@ -845,32 +845,78 @@
         }
 
         @media (max-width: 480px) and (orientation: portrait) {
-            #control-panel {
-                top: 55px;
-                right: 5px;
-            }
-
-            #visuals-panel {
-                bottom: 5px;
-                left: 5px;
-            }
-
-            #control-panel.collapsed,
-            #visuals-panel.collapsed {
-                width: 45px;
-                height: 45px;
-                min-width: 45px;
-                min-height: 45px;
-            }
-
+            /* Top bar mobile optimization */
             #top-bar {
-                height: 40px;
-                padding: 5px 8px;
+                height: auto;
+                min-height: 50px;
+                padding: 8px;
+                flex-wrap: wrap;
+                gap: 6px;
             }
 
             #top-bar button {
-                padding: 5px 8px;
-                font-size: 8px;
+                padding: 8px 12px;
+                font-size: 10px;
+                min-height: 44px;
+                flex: 1 1 auto;
+            }
+
+            /* Control panel - right side, full height when expanded */
+            #control-panel {
+                top: 60px;
+                right: 5px;
+                width: calc(100vw - 15px);
+                max-width: 320px;
+                max-height: calc(100vh - 70px);
+            }
+
+            #control-panel.collapsed {
+                width: 50px;
+                height: 50px;
+                min-width: 50px;
+                min-height: 50px;
+            }
+
+            /* Visuals panel - bottom, horizontal when expanded */
+            #visuals-panel {
+                bottom: 5px;
+                left: 5px;
+                width: calc(100vw - 15px);
+                max-width: 100%;
+                max-height: 40vh;
+            }
+
+            #visuals-panel.collapsed {
+                width: 50px;
+                height: 50px;
+                min-width: 50px;
+                min-height: 50px;
+            }
+
+            /* Make all buttons touch-friendly */
+            button {
+                min-height: 44px;
+                font-size: 11px;
+            }
+
+            /* Bigger sliders for touch */
+            input[type="range"] {
+                height: 32px;
+            }
+
+            /* Collapsible section headers - touch friendly */
+            .section-header {
+                padding: 12px;
+                min-height: 44px;
+            }
+
+            /* Panel collapse buttons - bigger touch target */
+            .panel-collapse-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+                top: 7px;
+                right: 7px;
             }
         }
     </style>
