@@ -129,7 +129,11 @@ export class HolographicVisualizer {
             saturation: 0.8 + (variationLevel * 0.05), // Add saturation parameter
             intensity: 0.5 + (variationLevel * 0.1),
             chaos: config.chaos,
-            morph: config.morph
+            morph: config.morph,
+            // MVEP-style parameters
+            moireScale: 1.01,
+            glitchIntensity: 0.05,
+            lineThickness: 0.02
         };
     }
     
@@ -210,7 +214,12 @@ export class HolographicVisualizer {
             uniform float u_rot4dXW;
             uniform float u_rot4dYW;
             uniform float u_rot4dZW;
-            
+
+            // MVEP-style parameters
+            uniform float u_moireScale;
+            uniform float u_glitchIntensity;
+            uniform float u_lineThickness;
+
             // 4D rotation matrices
             mat4 rotateXW(float theta) {
                 float c = cos(theta);
@@ -375,13 +384,14 @@ export class HolographicVisualizer {
                 float b = color.b + sin(uv.y * 32.0 + u_time * 0.0008) * intensity * 0.06;
                 return vec3(r, g, b);
             }
-            
+
+            // MVEP-style moiré pattern - NOW USES u_moireScale
             float moirePattern(vec2 uv, float intensity) {
-                float freq1 = 12.0 + intensity * 6.0 + u_densityVariation * 3.0;
-                float freq2 = 14.0 + intensity * 8.0 + u_densityVariation * 4.0;
+                float freq1 = 12.0 * u_moireScale + intensity * 6.0;
+                float freq2 = 14.0 * u_moireScale + intensity * 8.0;
                 float pattern1 = sin(uv.x * freq1) * sin(uv.y * freq1);
                 float pattern2 = sin(uv.x * freq2) * sin(uv.y * freq2);
-                return (pattern1 * pattern2) * intensity * 0.15;
+                return (pattern1 * pattern2) * intensity * 0.2 * u_moireScale;
             }
             
             float gridOverlay(vec2 uv, float intensity) {
@@ -431,7 +441,10 @@ export class HolographicVisualizer {
                 
                 float morphedGeometry = u_geometryType + u_morph * 3.0 + u_touchMorph * 2.0 + u_audioMorphBoost * 1.5;
                 float lattice = getDynamicGeometry(p, roleDensity, morphedGeometry);
-                
+
+                // Apply line thickness - makes geometry edges thicker or thinner
+                lattice = lattice / u_lineThickness;
+
                 // Enhanced holographic color processing
                 vec3 baseColor = u_color;
                 float latticeIntensity = lattice * u_intensity;
@@ -454,10 +467,11 @@ export class HolographicVisualizer {
                 float depth = 1.0 - length(p) * 0.3;
                 color *= (0.7 + depth * 0.3);
                 
+                // MVEP-style effects using u_glitchIntensity
                 float enhancedChaos = u_chaos + u_chaosIntensity + u_touchChaos * 0.3 + u_audioChaosBoost * 0.4;
-                color += vec3(moirePattern(uv + scrollOffset, enhancedChaos));
+                color += vec3(moirePattern(uv + scrollOffset, u_glitchIntensity + enhancedChaos * 0.5));
                 color += vec3(gridOverlay(uv, u_mouseIntensity + u_scrollParallax * 0.1));
-                color = rgbGlitch(color, uv, enhancedChaos);
+                color = rgbGlitch(color, uv, u_glitchIntensity + enhancedChaos * 0.5);
                 
                 // Apply morph distortion to position
                 vec2 morphDistortion = vec2(sin(uv.y * 10.0 + u_time * 0.001) * u_morph * 0.1, 
@@ -517,7 +531,11 @@ export class HolographicVisualizer {
             audioColorShift: this.gl.getUniformLocation(this.program, 'u_audioColorShift'),
             rot4dXW: this.gl.getUniformLocation(this.program, 'u_rot4dXW'),
             rot4dYW: this.gl.getUniformLocation(this.program, 'u_rot4dYW'),
-            rot4dZW: this.gl.getUniformLocation(this.program, 'u_rot4dZW')
+            rot4dZW: this.gl.getUniformLocation(this.program, 'u_rot4dZW'),
+            // MVEP-style parameters
+            moireScale: this.gl.getUniformLocation(this.program, 'u_moireScale'),
+            glitchIntensity: this.gl.getUniformLocation(this.program, 'u_glitchIntensity'),
+            lineThickness: this.gl.getUniformLocation(this.program, 'u_lineThickness')
         };
     }
     
@@ -809,7 +827,12 @@ export class HolographicVisualizer {
         this.gl.uniform1f(this.uniforms.rot4dXW, this.variantParams.rot4dXW || 0.0);
         this.gl.uniform1f(this.uniforms.rot4dYW, this.variantParams.rot4dYW || 0.0);
         this.gl.uniform1f(this.uniforms.rot4dZW, this.variantParams.rot4dZW || 0.0);
-        
+
+        // MVEP-style parameters
+        this.gl.uniform1f(this.uniforms.moireScale, this.variantParams.moireScale || 1.01);
+        this.gl.uniform1f(this.uniforms.glitchIntensity, this.variantParams.glitchIntensity || 0.05);
+        this.gl.uniform1f(this.uniforms.lineThickness, this.variantParams.lineThickness || 0.02);
+
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
     
@@ -897,14 +920,18 @@ export class HolographicVisualizer {
             'gridDensity': 'density',
             'morphFactor': 'morph',
             'rot4dXW': 'rot4dXW',
-            'rot4dYW': 'rot4dYW', 
+            'rot4dYW': 'rot4dYW',
             'rot4dZW': 'rot4dZW',
             'hue': 'hue',
             'intensity': 'intensity',
             'saturation': 'saturation',
             'chaos': 'chaos',
             'speed': 'speed',
-            'geometry': 'geometryType'
+            'geometry': 'geometryType',
+            // MVEP-style parameters
+            'moireScale': 'moireScale',
+            'glitchIntensity': 'glitchIntensity',
+            'lineThickness': 'lineThickness'
         };
         return paramMap[globalParam] || globalParam;
     }

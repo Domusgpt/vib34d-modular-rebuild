@@ -65,7 +65,11 @@ export class QuantumHolographicVisualizer {
             dimension: 3.5,
             rot4dXW: 0.0,
             rot4dYW: 0.0,
-            rot4dZW: 0.0
+            rot4dZW: 0.0,
+            // MVEP-style parameters
+            moireScale: 1.01,
+            glitchIntensity: 0.05,
+            lineThickness: 0.02
         };
         
         this.init();
@@ -250,6 +254,11 @@ uniform float u_mouseIntensity;
 uniform float u_clickIntensity;
 uniform float u_roleIntensity;
 
+// MVEP-style audio reactivity enhancements
+uniform float u_moireScale;
+uniform float u_glitchIntensity;
+uniform float u_lineThickness;
+
 // 4D rotation matrices
 mat4 rotateXW(float theta) {
     float c = cos(theta);
@@ -272,6 +281,24 @@ mat4 rotateZW(float theta) {
 vec3 project4Dto3D(vec4 p) {
     float w = 2.5 / (2.5 + p.w);
     return vec3(p.x * w, p.y * w, p.z * w);
+}
+
+// MVEP-style moiré pattern function - NOW USES u_moireScale
+float moirePattern(vec2 uv, float intensity) {
+    float freq1 = 12.0 * u_moireScale + intensity * 6.0;
+    float freq2 = 14.0 * u_moireScale + intensity * 8.0;
+    float pattern1 = sin(uv.x * freq1) * sin(uv.y * freq1);
+    float pattern2 = sin(uv.x * freq2) * sin(uv.y * freq2);
+    return (pattern1 * pattern2) * intensity * 0.2 * u_moireScale;
+}
+
+// MVEP-style RGB color splitting glitch
+vec3 rgbGlitch(vec3 color, vec2 uv, float intensity) {
+    vec2 offset = vec2(intensity * 0.005, 0.0);
+    float r = color.r + sin(uv.y * 30.0 + u_time * 0.001) * intensity * 0.06;
+    float g = color.g + sin(uv.y * 28.0 + u_time * 0.0012) * intensity * 0.06;
+    float b = color.b + sin(uv.y * 32.0 + u_time * 0.0008) * intensity * 0.06;
+    return vec3(r, g, b);
 }
 
 // Complex 3D Lattice Functions - Superior Quantum Shaders
@@ -528,7 +555,10 @@ void main() {
     
     // Calculate enhanced geometry value
     float value = geometryFunction(pos);
-    
+
+    // Apply line thickness - makes geometry edges thicker or thinner
+    value = value / u_lineThickness;
+
     // Enhanced chaos with holographic effects
     float noise = sin(pos.x * 7.0) * cos(pos.y * 11.0) * sin(pos.z * 13.0);
     value += noise * u_chaos;
@@ -635,7 +665,11 @@ void main() {
     else if (layerIndex == 2) layerAlpha = 1.0;   // Content: Full intensity
     else if (layerIndex == 3) layerAlpha = 0.8;   // Highlight: High
     else layerAlpha = 0.3;                        // Accent: Subtle bursts
-    
+
+    // MVEP-style moiré pattern and RGB glitch effects
+    finalColor += vec3(moirePattern(uv, u_glitchIntensity));
+    finalColor = rgbGlitch(finalColor, uv, u_glitchIntensity);
+
     gl_FragColor = vec4(finalColor, finalIntensity * layerAlpha);
 }`;
         
@@ -658,7 +692,11 @@ void main() {
             rot4dZW: this.gl.getUniformLocation(this.program, 'u_rot4dZW'),
             mouseIntensity: this.gl.getUniformLocation(this.program, 'u_mouseIntensity'),
             clickIntensity: this.gl.getUniformLocation(this.program, 'u_clickIntensity'),
-            roleIntensity: this.gl.getUniformLocation(this.program, 'u_roleIntensity')
+            roleIntensity: this.gl.getUniformLocation(this.program, 'u_roleIntensity'),
+            // MVEP-style parameters
+            moireScale: this.gl.getUniformLocation(this.program, 'u_moireScale'),
+            glitchIntensity: this.gl.getUniformLocation(this.program, 'u_glitchIntensity'),
+            lineThickness: this.gl.getUniformLocation(this.program, 'u_lineThickness')
         };
     }
     
@@ -925,7 +963,12 @@ void main() {
         this.gl.uniform1f(this.uniforms.mouseIntensity, this.mouseIntensity);
         this.gl.uniform1f(this.uniforms.clickIntensity, this.clickIntensity);
         this.gl.uniform1f(this.uniforms.roleIntensity, roleIntensities[this.role] || 1.0);
-        
+
+        // MVEP-style parameters
+        this.gl.uniform1f(this.uniforms.moireScale, this.params.moireScale || 1.01);
+        this.gl.uniform1f(this.uniforms.glitchIntensity, this.params.glitchIntensity || 0.05);
+        this.gl.uniform1f(this.uniforms.lineThickness, this.params.lineThickness || 0.02);
+
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
     

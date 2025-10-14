@@ -27,7 +27,11 @@ export class XYTouchpad {
             saturation: { min: 0, max: 1, step: 0.01, label: 'Saturation' },
             rot4dXW: { min: -3.14159, max: 3.14159, step: 0.01, label: '4D XW' },
             rot4dYW: { min: -3.14159, max: 3.14159, step: 0.01, label: '4D YW' },
-            rot4dZW: { min: -3.14159, max: 3.14159, step: 0.01, label: '4D ZW' }
+            rot4dZW: { min: -3.14159, max: 3.14159, step: 0.01, label: '4D ZW' },
+            // MVEP-style parameters
+            moireScale: { min: 0.95, max: 1.05, step: 0.001, label: 'Moiré Scale' },
+            glitchIntensity: { min: 0, max: 0.2, step: 0.01, label: 'Glitch Intensity' },
+            lineThickness: { min: 0.01, max: 0.1, step: 0.005, label: 'Line Thickness' }
         };
 
         this.init();
