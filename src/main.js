@@ -19,6 +19,9 @@ import { VisualsMenu } from './ui/VisualsMenu.js';
 import { XYTouchpad } from './ui/XYTouchpad.js';
 import { VisualizerXYPad } from './ui/VisualizerXYPad.js';
 
+// 🧪 TEST: New UI Redesign Components
+import { initTestUI } from './ui/redesign/test-core-panel.js';
+
 console.log('🎬 VIB34D Timeline Loading...');
 console.log('✅ RecordingEngine loaded');
 console.log('✅ AudioAnalyzer loaded');
@@ -85,12 +88,21 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         console.log('✅ All UI components initialized');
 
+        // 🧪 TEST: Initialize new UI redesign components
+        console.log('🧪 Initializing TEST UI (new design)...');
+        window.testUI = initTestUI(choreographer);
+        console.log('✅ TEST UI initialized');
+        console.log('   Check right side for new CoreParametersPanel');
+        console.log('   Check bottom-right for new StatusBadge');
+        console.log('   Move cursor on canvas for crosshair test');
+
         // Make modules available for debugging
         window.VIB34D_MODULES = MODULES_LOADED;
         console.log('🔧 Debug: window.VIB34D_MODULES available');
         console.log('🔧 Debug: window.choreographer available');
         console.log('🔧 Debug: window.integratedControls available');
         console.log('🔧 Debug: window.visualsMenu available');
+        console.log('🔧 Debug: window.testUI available (new design)');
 
     } catch (error) {
         console.error('❌ Failed to initialize:', error);
