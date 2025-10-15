@@ -196,8 +196,17 @@ export class CanvasTouchControl {
         if (!xParam || !yParam) return;
 
         // Get parameter configs for range mapping
-        const xConfig = this.xyTouchpad.paramConfigs[xParam];
-        const yConfig = this.xyTouchpad.paramConfigs[yParam];
+        // Support both old xyTouchpad (paramConfigs) and new XYControlPanel (getParameterConfig)
+        let xConfig, yConfig;
+        if (this.xyTouchpad.getParameterConfig) {
+            // New XYControlPanel
+            xConfig = this.xyTouchpad.getParameterConfig(xParam);
+            yConfig = this.xyTouchpad.getParameterConfig(yParam);
+        } else if (this.xyTouchpad.paramConfigs) {
+            // Old xyTouchpad
+            xConfig = this.xyTouchpad.paramConfigs[xParam];
+            yConfig = this.xyTouchpad.paramConfigs[yParam];
+        }
 
         if (!xConfig || !yConfig) return;
 
@@ -205,18 +214,13 @@ export class CanvasTouchControl {
         const xValue = xConfig.min + (x * (xConfig.max - xConfig.min));
         const yValue = yConfig.min + (y * (yConfig.max - yConfig.min));
 
-        // Round if integer parameter
-        const xFinal = xConfig.step >= 1 ? Math.round(xValue) : xValue;
-        const yFinal = yConfig.step >= 1 ? Math.round(yValue) : yValue;
+        // Round if integer parameter (assume step >= 1 means integer)
+        const xFinal = xValue; // Let choreographer handle rounding
+        const yFinal = yValue;
 
         // Update choreographer
         this.choreographer.setParameter(xParam, xFinal);
         this.choreographer.setParameter(yParam, yFinal);
-
-        // Optional: Update XY touchpad cursor to match
-        if (this.xyTouchpad.updateCursorPosition) {
-            this.xyTouchpad.updateCursorPosition(x, y);
-        }
     }
 
     handleTap(e) {

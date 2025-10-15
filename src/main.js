@@ -88,13 +88,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         console.log('✅ All UI components initialized');
 
-        // 🧪 TEST: Initialize new UI redesign components
-        console.log('🧪 Initializing TEST UI (new design)...');
+        // 🧪 Initialize new UI redesign system (all 5 panels)
+        console.log('🧪 Initializing complete UI Redesign system...');
         window.testUI = initTestUI(choreographer);
-        console.log('✅ TEST UI initialized');
-        console.log('   Check right side for new CoreParametersPanel');
-        console.log('   Check bottom-right for new StatusBadge');
-        console.log('   Move cursor on canvas for crosshair test');
+        console.log('✅ Complete UI Redesign system initialized');
+        console.log('   📦 5 panels created (check right side)');
+        console.log('   🎯 Status badge (bottom-right corner)');
+        console.log('   ➕ Canvas crosshair (move cursor)');
+        console.log('   🖱️ Drag panels by header');
+        console.log('   🔄 Double-click header to collapse/expand');
 
         // Make modules available for debugging
         window.VIB34D_MODULES = MODULES_LOADED;
