@@ -18,6 +18,8 @@
 import { CollapsibleDraggablePanel } from '../components/CollapsibleDraggablePanel.js';
 import { ParameterSlider } from '../components/ParameterSlider.js';
 
+console.log('✅ VisualStylePanel module loaded');
+
 export class VisualStylePanel {
     constructor(choreographer) {
         this.choreographer = choreographer;
