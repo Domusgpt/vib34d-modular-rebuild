@@ -21,9 +21,9 @@ export class XYControlPanel {
         this.xDropdown = null;
         this.yDropdown = null;
 
-        // Parameter mappings (match XYTouchpad.js)
-        this.xParam = 'speed';
-        this.yParam = 'gridDensity';
+        // Parameter mappings - Default to 4D rotations for intuitive control
+        this.xParam = 'rotationXW';  // Horizontal touch = XW plane rotation (4D)
+        this.yParam = 'rotationYW';  // Vertical touch = YW plane rotation (4D)
 
         // Touch state
         this.isActive = false;
@@ -65,12 +65,14 @@ export class XYControlPanel {
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <label style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7);">X-AXIS:</label>
                         <select id="xy-x-param" class="vib-dropdown" style="width: 60%; font-size: 11px;">
+                            <option value="rotationXW" selected>Rotation XW (4D)</option>
+                            <option value="rotationXY">Rotation XY</option>
+                            <option value="rotationXZ">Rotation XZ</option>
+                            <option value="rotationZW">Rotation ZW (4D)</option>
                             <option value="speed">Speed</option>
                             <option value="chaos">Chaos</option>
                             <option value="gridDensity">Grid Density</option>
                             <option value="morphFactor">Morph Factor</option>
-                            <option value="rotationXY">Rotation XY</option>
-                            <option value="rotationXZ">Rotation XZ</option>
                             <option value="hue">Hue</option>
                             <option value="saturation">Saturation</option>
                         </select>
@@ -78,12 +80,14 @@ export class XYControlPanel {
                     <div style="display: flex; justify-content: space-between;">
                         <label style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7);">Y-AXIS:</label>
                         <select id="xy-y-param" class="vib-dropdown" style="width: 60%; font-size: 11px;">
+                            <option value="rotationYW" selected>Rotation YW (4D)</option>
+                            <option value="rotationYZ">Rotation YZ</option>
+                            <option value="rotationXW">Rotation XW (4D)</option>
+                            <option value="rotationZW">Rotation ZW (4D)</option>
                             <option value="speed">Speed</option>
                             <option value="chaos">Chaos</option>
-                            <option value="gridDensity" selected>Grid Density</option>
+                            <option value="gridDensity">Grid Density</option>
                             <option value="morphFactor">Morph Factor</option>
-                            <option value="rotationYZ">Rotation YZ</option>
-                            <option value="rotationYW">Rotation YW</option>
                             <option value="brightness">Brightness</option>
                             <option value="glowIntensity">Glow Intensity</option>
                         </select>
@@ -293,8 +297,10 @@ export class XYControlPanel {
             'morphFactor': { min: 0, max: 5 },
             'rotationXY': { min: -180, max: 180 },
             'rotationXZ': { min: -180, max: 180 },
+            'rotationXW': { min: -180, max: 180 },  // 4D rotation
             'rotationYZ': { min: -180, max: 180 },
-            'rotationYW': { min: -180, max: 180 },
+            'rotationYW': { min: -180, max: 180 },  // 4D rotation
+            'rotationZW': { min: -180, max: 180 },  // 4D rotation
             'hue': { min: 0, max: 360 },
             'saturation': { min: 0, max: 100 },
             'brightness': { min: 0, max: 100 },
