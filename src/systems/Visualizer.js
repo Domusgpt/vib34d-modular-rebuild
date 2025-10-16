@@ -51,6 +51,10 @@ export class IntegratedHolographicVisualizer {
             intensity: 0.5,
             saturation: 0.8,
             dimension: 3.5,
+            // All 6 4D rotation planes
+            rot4dXY: 0.0,
+            rot4dXZ: 0.0,
+            rot4dYZ: 0.0,
             rot4dXW: 0.0,
             rot4dYW: 0.0,
             rot4dZW: 0.0,
@@ -193,31 +197,282 @@ uniform float u_moireScale;
 uniform float u_glitchIntensity;
 uniform float u_lineThickness;
 
-// 4D rotation matrices
+// Additional uniforms for polytope system
+uniform float u_rot4dXY;
+uniform float u_rot4dXZ;
+uniform float u_rot4dYZ;
+uniform float u_audioHigh;
+uniform float u_audioMid;
+
+// 6 Independent 4D rotation matrices
+mat4 rotateXY(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat4(c, -s, 0.0, 0.0,
+                s,  c, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+}
+
+mat4 rotateXZ(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat4(c, 0.0, -s, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                s, 0.0,  c, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+}
+
+mat4 rotateYZ(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat4(1.0, 0.0, 0.0, 0.0,
+                0.0, c, -s, 0.0,
+                0.0, s,  c, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+}
+
 mat4 rotateXW(float theta) {
     float c = cos(theta);
     float s = sin(theta);
-    return mat4(c, 0.0, 0.0, -s, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, s, 0.0, 0.0, c);
+    return mat4(c, 0, 0, -s, 0, 1, 0, 0, 0, 0, 1, 0, s, 0, 0, c);
 }
 
 mat4 rotateYW(float theta) {
     float c = cos(theta);
     float s = sin(theta);
-    return mat4(1.0, 0.0, 0.0, 0.0, 0.0, c, 0.0, -s, 0.0, 0.0, 1.0, 0.0, 0.0, s, 0.0, c);
+    return mat4(1, 0, 0, 0, 0, c, 0, -s, 0, 0, 1, 0, 0, s, 0, c);
 }
 
 mat4 rotateZW(float theta) {
     float c = cos(theta);
     float s = sin(theta);
-    return mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, c, -s, 0.0, 0.0, s, c);
+    return mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, c, -s, 0, 0, s, c);
 }
 
+// 4D to 3D projection
 vec3 project4Dto3D(vec4 p) {
     float w = 2.5 / (2.5 + p.w);
     return vec3(p.x * w, p.y * w, p.z * w);
 }
 
-// MVEP-style moiré pattern function - NOW USES u_moireScale
+// Interactive 4D rotation with mouse, scroll, and touch
+vec4 applyInteractiveRotation(vec4 pos, vec2 mouseOffset, float scrollRotation, float touchRotation) {
+    float timeFactor = u_time * 0.0004 * u_speed;
+    float audioOffset = (u_chaos + u_morphFactor) * 0.2;
+
+    pos = rotateXY(u_rot4dXY + timeFactor * 0.18 + mouseOffset.x * 0.4 + scrollRotation * 0.15) * pos;
+    pos = rotateXZ(u_rot4dXZ + timeFactor * 0.16 + mouseOffset.y * 0.35 + touchRotation * 0.2) * pos;
+    pos = rotateYZ(u_rot4dYZ + timeFactor * 0.12 + u_clickIntensity * 0.2) * pos;
+    pos = rotateXW(u_rot4dXW + timeFactor * 0.2 + mouseOffset.y * 0.5 + scrollRotation) * pos;
+    pos = rotateYW(u_rot4dYW + timeFactor * 0.15 + mouseOffset.x * 0.5 + touchRotation) * pos;
+    pos = rotateZW(u_rot4dZW + timeFactor * 0.25 + u_clickIntensity * 0.3 + audioOffset) * pos;
+    return pos;
+}
+
+// Hypersphere core warping (coreIndex = 1)
+vec3 warpHypersphereCore(vec3 p, int geometryIndex, vec2 mouseOffset, float scrollRotation, float touchRotation) {
+    float radius = length(p);
+    float morphBlend = clamp(u_morphFactor + u_audioMid * 0.5, 0.0, 2.0);
+    float audioLift = (u_audioHigh * 0.5 + u_audioMid * 0.35);
+    float w = sin(radius * (1.4 + float(geometryIndex) * 0.1) + u_time * 0.0015 * u_speed);
+    w *= (0.35 + morphBlend * 0.4 + audioLift);
+
+    vec4 p4d = vec4(p * (1.0 + morphBlend * 0.25), w);
+    p4d = applyInteractiveRotation(p4d, mouseOffset, scrollRotation, touchRotation);
+    vec3 projected = project4Dto3D(p4d);
+
+    float blend = clamp(0.35 + morphBlend * 0.35, 0.0, 1.0);
+    return mix(p, projected, blend);
+}
+
+// Hypertetrahedron core warping (coreIndex = 2)
+vec3 warpHypertetraCore(vec3 p, int geometryIndex, vec2 mouseOffset, float scrollRotation, float touchRotation) {
+    vec3 c1 = normalize(vec3(1.0, 1.0, 1.0));
+    vec3 c2 = normalize(vec3(-1.0, -1.0, 1.0));
+    vec3 c3 = normalize(vec3(-1.0, 1.0, -1.0));
+    vec3 c4 = normalize(vec3(1.0, -1.0, -1.0));
+
+    float morphBlend = clamp(u_morphFactor * 0.8 + u_audioHigh * 0.4, 0.0, 2.0);
+    float basisMix = dot(p, c1) * 0.12 + dot(p, c2) * 0.08 + dot(p, c3) * 0.05;
+    float w = sin(basisMix * 6.0 + u_time * 0.0012 * u_speed);
+    w *= cos(dot(p, c4) * 4.5 - u_time * 0.0010 * u_speed);
+    w *= (0.45 + morphBlend * 0.35 + u_audioHigh * 0.3);
+
+    vec3 offset = vec3(dot(p, c1), dot(p, c2), dot(p, c3)) * 0.12 * morphBlend;
+    vec4 p4d = vec4(p + offset, w);
+    p4d = applyInteractiveRotation(p4d, mouseOffset, scrollRotation, touchRotation);
+    vec3 projected = project4Dto3D(p4d);
+
+    float planeInfluence = min(min(abs(dot(p, c1)), abs(dot(p, c2))), min(abs(dot(p, c3)), abs(dot(p, c4))));
+    vec3 blended = mix(p, projected, clamp(0.4 + morphBlend * 0.4, 0.0, 1.0));
+    return mix(blended, blended * (1.0 - planeInfluence * 0.6), 0.25 + morphBlend * 0.15);
+}
+
+// Core warp dispatcher
+vec3 applyCoreWarp(vec3 p, float geometryType, vec2 mouseOffset, float scrollRotation, float touchRotation) {
+    float totalBase = 8.0;
+    float coreFloat = floor(geometryType / totalBase);
+    int coreIndex = int(clamp(coreFloat, 0.0, 2.0));
+    float baseGeomFloat = mod(geometryType, totalBase);
+    int geometryIndex = int(clamp(floor(baseGeomFloat + 0.5), 0.0, totalBase - 1.0));
+
+    if (coreIndex == 1) {
+        return warpHypersphereCore(p, geometryIndex, mouseOffset, scrollRotation, touchRotation);
+    }
+    if (coreIndex == 2) {
+        return warpHypertetraCore(p, geometryIndex, mouseOffset, scrollRotation, touchRotation);
+    }
+
+    return p; // Hypercube core (no warping)
+}
+
+// Enhanced VIB3 Geometry Library - 8 geometry styles
+float tetrahedronLattice(vec3 p, float gridSize) {
+    vec3 q = fract(p * gridSize) - 0.5;
+
+    // Enhanced tetrahedron vertices with holographic shimmer
+    float d1 = length(q);
+    float d2 = length(q - vec3(0.35, 0.0, 0.0));
+    float d3 = length(q - vec3(0.0, 0.35, 0.0));
+    float d4 = length(q - vec3(0.0, 0.0, 0.35));
+    float d5 = length(q - vec3(0.2, 0.2, 0.0));
+    float d6 = length(q - vec3(0.2, 0.0, 0.2));
+    float d7 = length(q - vec3(0.0, 0.2, 0.2));
+
+    float vertices = 1.0 - smoothstep(0.0, 0.03, min(min(min(d1, d2), min(d3, d4)), min(min(d5, d6), d7)));
+
+    // Enhanced edge network with interference patterns
+    float edges = 0.0;
+    float shimmer = sin(u_time * 0.002) * 0.02;
+    edges = max(edges, 1.0 - smoothstep(0.0, 0.015, abs(length(q.xy) - (0.18 + shimmer))));
+    edges = max(edges, 1.0 - smoothstep(0.0, 0.015, abs(length(q.yz) - (0.18 + shimmer * 0.8))));
+    edges = max(edges, 1.0 - smoothstep(0.0, 0.015, abs(length(q.xz) - (0.18 + shimmer * 1.2))));
+
+    // Add interference patterns between vertices
+    float interference = sin(d1 * 25.0 + u_time * 0.003) * sin(d2 * 22.0 + u_time * 0.0025) * 0.1;
+
+    // Volumetric density based on distance field
+    float volume = exp(-length(q) * 3.0) * 0.15;
+
+    return max(vertices, edges * 0.7) + interference + volume;
+}
+
+float hypercubeLattice(vec3 p, float gridSize) {
+    vec3 grid = fract(p * gridSize);
+    vec3 q = grid - 0.5;
+
+    // Enhanced hypercube with 4D projection effects
+    vec3 edges = 1.0 - smoothstep(0.0, 0.025, abs(q));
+    float wireframe = max(max(edges.x, edges.y), edges.z);
+
+    // Add 4D hypercube vertices (8 corners + 8 hypervertices)
+    float vertices = 0.0;
+    for(int i = 0; i < 8; i++) {
+        float iFloat = float(i);
+        vec3 corner = vec3(
+            floor(iFloat - floor(iFloat / 2.0) * 2.0) - 0.5,
+            floor((iFloat / 2.0) - floor((iFloat / 2.0) / 2.0) * 2.0) - 0.5,
+            float(i / 4) - 0.5
+        );
+        float dist = length(q - corner * 0.4);
+        vertices = max(vertices, 1.0 - smoothstep(0.0, 0.04, dist));
+    }
+
+    // Holographic interference patterns
+    float interference = sin(length(q) * 20.0 + u_time * 0.002) * 0.08;
+
+    // Cross-dimensional glow
+    float glow = exp(-length(q) * 2.5) * 0.12;
+
+    return wireframe * 0.8 + vertices + interference + glow;
+}
+
+float sphereLattice(vec3 p, float gridSize) {
+    vec3 q = fract(p * gridSize) - 0.5;
+    float r = length(q);
+    return 1.0 - smoothstep(0.2, 0.5, r);
+}
+
+float torusLattice(vec3 p, float gridSize) {
+    vec3 q = fract(p * gridSize) - 0.5;
+    float r1 = sqrt(q.x*q.x + q.y*q.y);
+    float r2 = sqrt((r1 - 0.3)*(r1 - 0.3) + q.z*q.z);
+    return 1.0 - smoothstep(0.0, 0.1, r2);
+}
+
+float kleinLattice(vec3 p, float gridSize) {
+    vec3 q = fract(p * gridSize);
+    float u = q.x * 2.0 * 3.14159;
+    float v = q.y * 2.0 * 3.14159;
+    float x = cos(u) * (3.0 + cos(u/2.0) * sin(v) - sin(u/2.0) * sin(2.0*v));
+    float klein = length(vec2(x, q.z)) - 0.1;
+    return 1.0 - smoothstep(0.0, 0.05, abs(klein));
+}
+
+float fractalLattice(vec3 p, float gridSize) {
+    vec3 q = p * gridSize;
+    float scale = 1.0;
+    float fractal = 0.0;
+    for(int i = 0; i < 4; i++) {
+      q = fract(q) - 0.5;
+      fractal += abs(length(q)) / scale;
+      scale *= 2.0;
+      q *= 2.0;
+    }
+    return 1.0 - smoothstep(0.0, 1.0, fractal);
+}
+
+float waveLattice(vec3 p, float gridSize) {
+    vec3 q = p * gridSize;
+    float wave = sin(q.x * 2.0) * sin(q.y * 2.0) * sin(q.z * 2.0 + u_time);
+    return smoothstep(-0.5, 0.5, wave);
+}
+
+float crystalLattice(vec3 p, float gridSize) {
+    vec3 q = fract(p * gridSize) - 0.5;
+    float d = max(max(abs(q.x), abs(q.y)), abs(q.z));
+    return 1.0 - smoothstep(0.3, 0.5, d);
+}
+
+// Dynamic geometry with polytope core integration
+float getDynamicGeometry(vec3 p, float gridSize, float geometryType) {
+    float totalBase = 8.0;
+    float coreFloat = clamp(floor(geometryType / totalBase), 0.0, 2.0);
+    float baseGeomFloat = mod(geometryType, totalBase);
+    int baseGeom = int(clamp(floor(baseGeomFloat + 0.5), 0.0, totalBase - 1.0));
+
+    float variation = coreFloat / 2.0;
+    float variedGridSize = gridSize * mix(0.85, 1.25, variation);
+
+    float baseValue;
+    if (baseGeom == 0) baseValue = tetrahedronLattice(p, variedGridSize);
+    else if (baseGeom == 1) baseValue = hypercubeLattice(p, variedGridSize);
+    else if (baseGeom == 2) baseValue = sphereLattice(p, variedGridSize);
+    else if (baseGeom == 3) baseValue = torusLattice(p, variedGridSize);
+    else if (baseGeom == 4) baseValue = kleinLattice(p, variedGridSize);
+    else if (baseGeom == 5) baseValue = fractalLattice(p, variedGridSize);
+    else if (baseGeom == 6) baseValue = waveLattice(p, variedGridSize);
+    else baseValue = crystalLattice(p, variedGridSize);
+
+    float hypersphereInfluence = 0.35 + variation * 0.35;
+    float hypertetraInfluence = 0.45 + variation * 0.4;
+
+    if (coreFloat == 1.0) {
+        float radius = length(p);
+        float shell = 0.5 + 0.5 * sin(radius * variedGridSize * 0.6 + u_time * 0.0006 * u_speed);
+        baseValue = mix(baseValue, smoothstep(0.75, 1.0, shell), hypersphereInfluence);
+    } else if (coreFloat == 2.0) {
+        vec3 diag = normalize(vec3(1.0, 1.0, 1.0));
+        float plane = abs(dot(normalize(p + 0.0001), diag));
+        float striated = smoothstep(0.6, 1.0, plane);
+        baseValue = mix(baseValue, striated, hypertetraInfluence);
+    }
+
+    return baseValue;
+}
+
+// MVEP-style moiré pattern function
 float moirePattern(vec2 uv, float intensity) {
     float freq1 = 12.0 * u_moireScale + intensity * 6.0;
     float freq2 = 14.0 * u_moireScale + intensity * 8.0;
@@ -235,125 +490,49 @@ vec3 rgbGlitch(vec3 color, vec2 uv, float intensity) {
     return vec3(r, g, b);
 }
 
-// Simplified geometry functions for WebGL 1.0 compatibility (ORIGINAL FACETED)
-float geometryFunction(vec4 p) {
-    int geomType = int(u_geometry);
-    
-    if (geomType == 0) {
-        // Tetrahedron lattice - UNIFORM GRID DENSITY
-        vec4 pos = fract(p * u_gridDensity * 0.08);
-        vec4 dist = min(pos, 1.0 - pos);
-        return min(min(dist.x, dist.y), min(dist.z, dist.w)) * u_morphFactor;
-    }
-    else if (geomType == 1) {
-        // Hypercube lattice - UNIFORM GRID DENSITY
-        vec4 pos = fract(p * u_gridDensity * 0.08);
-        vec4 dist = min(pos, 1.0 - pos);
-        float minDist = min(min(dist.x, dist.y), min(dist.z, dist.w));
-        return minDist * u_morphFactor;
-    }
-    else if (geomType == 2) {
-        // Sphere lattice - UNIFORM GRID DENSITY
-        float r = length(p);
-        float density = u_gridDensity * 0.08;
-        float spheres = abs(fract(r * density) - 0.5) * 2.0;
-        float theta = atan(p.y, p.x);
-        float harmonics = sin(theta * 3.0) * 0.2;
-        return (spheres + harmonics) * u_morphFactor;
-    }
-    else if (geomType == 3) {
-        // Torus lattice - UNIFORM GRID DENSITY
-        float r1 = length(p.xy) - 2.0;
-        float torus = length(vec2(r1, p.z)) - 0.8;
-        float lattice = sin(p.x * u_gridDensity * 0.08) * sin(p.y * u_gridDensity * 0.08);
-        return (torus + lattice * 0.3) * u_morphFactor;
-    }
-    else if (geomType == 4) {
-        // Klein bottle lattice - UNIFORM GRID DENSITY
-        float u = atan(p.y, p.x);
-        float v = atan(p.w, p.z);
-        float dist = length(p) - 2.0;
-        float lattice = sin(u * u_gridDensity * 0.08) * sin(v * u_gridDensity * 0.08);
-        return (dist + lattice * 0.4) * u_morphFactor;
-    }
-    else if (geomType == 5) {
-        // Fractal lattice - NOW WITH UNIFORM GRID DENSITY
-        vec4 pos = fract(p * u_gridDensity * 0.08);
-        pos = abs(pos * 2.0 - 1.0);
-        float dist = length(max(abs(pos) - 1.0, 0.0));
-        return dist * u_morphFactor;
-    }
-    else if (geomType == 6) {
-        // Wave lattice - UNIFORM GRID DENSITY
-        float freq = u_gridDensity * 0.08;
-        float time = u_time * 0.001 * u_speed;
-        float wave1 = sin(p.x * freq + time);
-        float wave2 = sin(p.y * freq + time * 1.3);
-        float wave3 = sin(p.z * freq * 0.8 + time * 0.7); // Add Z-dimension waves
-        float interference = wave1 * wave2 * wave3;
-        return interference * u_morphFactor;
-    }
-    else if (geomType == 7) {
-        // Crystal lattice - UNIFORM GRID DENSITY
-        vec4 pos = fract(p * u_gridDensity * 0.08) - 0.5;
-        float cube = max(max(abs(pos.x), abs(pos.y)), max(abs(pos.z), abs(pos.w)));
-        return cube * u_morphFactor;
-    }
-    else {
-        // Default hypercube - UNIFORM GRID DENSITY
-        vec4 pos = fract(p * u_gridDensity * 0.08);
-        vec4 dist = min(pos, 1.0 - pos);
-        return min(min(dist.x, dist.y), min(dist.z, dist.w)) * u_morphFactor;
-    }
-}
-
 void main() {
     vec2 uv = (gl_FragCoord.xy - u_resolution.xy * 0.5) / min(u_resolution.x, u_resolution.y);
-    
-    // 4D position with mouse interaction - NOW USING SPEED PARAMETER
-    float timeSpeed = u_time * 0.0001 * u_speed;
-    vec4 pos = vec4(uv * 3.0, sin(timeSpeed * 3.0), cos(timeSpeed * 2.0));
-    pos.xy += (u_mouse - 0.5) * u_mouseIntensity * 2.0;
-    
-    // Apply 4D rotations
-    pos = rotateXW(u_rot4dXW) * pos;
-    pos = rotateYW(u_rot4dYW) * pos;
-    pos = rotateZW(u_rot4dZW) * pos;
-    
-    // Calculate geometry value
-    float value = geometryFunction(pos);
 
-    // Apply line thickness - makes geometry edges thicker or thinner
-    value = value / u_lineThickness;
+    // 4D position with mouse interaction
+    float timeSpeed = u_time * 0.0001 * u_speed;
+    vec3 pos3d = vec3(uv * 3.0, sin(timeSpeed * 3.0));
+    vec2 mouseOffset = (u_mouse - 0.5) * u_mouseIntensity * 2.0;
+    pos3d.xy += mouseOffset;
+
+    // Apply polytope core warping
+    vec3 warpedPos = applyCoreWarp(pos3d, u_geometry, mouseOffset, 0.0, 0.0);
+
+    // Calculate geometry with polytope system
+    float gridSize = u_gridDensity * 0.08;
+    float lattice = getDynamicGeometry(warpedPos, gridSize, u_geometry);
+
+    // Apply line thickness
+    lattice = lattice / u_lineThickness;
 
     // Apply chaos
-    float noise = sin(pos.x * 7.0) * cos(pos.y * 11.0) * sin(pos.z * 13.0);
-    value += noise * u_chaos;
-    
-    // Color based on geometry value and hue with user-controlled intensity/saturation
-    float geometryIntensity = 1.0 - clamp(abs(value), 0.0, 1.0);
+    float noise = sin(warpedPos.x * 7.0) * cos(warpedPos.y * 11.0) * sin(warpedPos.z * 13.0);
+    lattice += noise * u_chaos;
+
+    // Color based on geometry value
+    float geometryIntensity = lattice;
     geometryIntensity += u_clickIntensity * 0.3;
-    
-    // Apply user intensity control
     float finalIntensity = geometryIntensity * u_intensity;
-    
-    float hue = u_hue / 360.0 + value * 0.1;
-    
+
+    float hue = u_hue / 360.0 + lattice * 0.1;
+
     // Create color with saturation control
     vec3 baseColor = vec3(
         sin(hue * 6.28318 + 0.0) * 0.5 + 0.5,
         sin(hue * 6.28318 + 2.0943) * 0.5 + 0.5,
         sin(hue * 6.28318 + 4.1887) * 0.5 + 0.5
     );
-    
-    // Apply saturation (mix with grayscale)
+
+    // Apply saturation
     float gray = (baseColor.r + baseColor.g + baseColor.b) / 3.0;
     vec3 color = mix(vec3(gray), baseColor, u_saturation) * finalIntensity;
 
-    // MVEP-style enhancements: Apply moiré pattern
+    // MVEP-style enhancements
     color += vec3(moirePattern(uv, u_glitchIntensity));
-
-    // MVEP-style enhancements: Apply RGB color splitting glitch
     color = rgbGlitch(color, uv, u_glitchIntensity);
 
     gl_FragColor = vec4(color, finalIntensity * u_roleIntensity);
@@ -373,12 +552,17 @@ void main() {
             intensity: this.gl.getUniformLocation(this.program, 'u_intensity'),
             saturation: this.gl.getUniformLocation(this.program, 'u_saturation'),
             dimension: this.gl.getUniformLocation(this.program, 'u_dimension'),
+            rot4dXY: this.gl.getUniformLocation(this.program, 'u_rot4dXY'),
+            rot4dXZ: this.gl.getUniformLocation(this.program, 'u_rot4dXZ'),
+            rot4dYZ: this.gl.getUniformLocation(this.program, 'u_rot4dYZ'),
             rot4dXW: this.gl.getUniformLocation(this.program, 'u_rot4dXW'),
             rot4dYW: this.gl.getUniformLocation(this.program, 'u_rot4dYW'),
             rot4dZW: this.gl.getUniformLocation(this.program, 'u_rot4dZW'),
             mouseIntensity: this.gl.getUniformLocation(this.program, 'u_mouseIntensity'),
             clickIntensity: this.gl.getUniformLocation(this.program, 'u_clickIntensity'),
             roleIntensity: this.gl.getUniformLocation(this.program, 'u_roleIntensity'),
+            audioHigh: this.gl.getUniformLocation(this.program, 'u_audioHigh'),
+            audioMid: this.gl.getUniformLocation(this.program, 'u_audioMid'),
             moireScale: this.gl.getUniformLocation(this.program, 'u_moireScale'),
             glitchIntensity: this.gl.getUniformLocation(this.program, 'u_glitchIntensity'),
             lineThickness: this.gl.getUniformLocation(this.program, 'u_lineThickness')
@@ -650,12 +834,28 @@ void main() {
         this.gl.uniform1f(this.uniforms.intensity, Math.min(1, intensity));
         this.gl.uniform1f(this.uniforms.saturation, this.params.saturation);
         this.gl.uniform1f(this.uniforms.dimension, this.params.dimension);
-        this.gl.uniform1f(this.uniforms.rot4dXW, this.params.rot4dXW);
-        this.gl.uniform1f(this.uniforms.rot4dYW, this.params.rot4dYW);
-        this.gl.uniform1f(this.uniforms.rot4dZW, this.params.rot4dZW);
+
+        // 4D rotation uniforms (all 6 planes)
+        this.gl.uniform1f(this.uniforms.rot4dXY, this.params.rot4dXY || 0.0);
+        this.gl.uniform1f(this.uniforms.rot4dXZ, this.params.rot4dXZ || 0.0);
+        this.gl.uniform1f(this.uniforms.rot4dYZ, this.params.rot4dYZ || 0.0);
+        this.gl.uniform1f(this.uniforms.rot4dXW, this.params.rot4dXW || 0.0);
+        this.gl.uniform1f(this.uniforms.rot4dYW, this.params.rot4dYW || 0.0);
+        this.gl.uniform1f(this.uniforms.rot4dZW, this.params.rot4dZW || 0.0);
+
         this.gl.uniform1f(this.uniforms.mouseIntensity, this.mouseIntensity);
         this.gl.uniform1f(this.uniforms.clickIntensity, this.clickIntensity);
         this.gl.uniform1f(this.uniforms.roleIntensity, roleIntensities[this.role] || 1.0);
+
+        // Audio uniforms for polytope system
+        let audioHigh = 0.0;
+        let audioMid = 0.0;
+        if (window.audioEnabled && window.audioReactive) {
+            audioHigh = window.audioReactive.high || 0.0;
+            audioMid = window.audioReactive.mid || 0.0;
+        }
+        this.gl.uniform1f(this.uniforms.audioHigh, audioHigh);
+        this.gl.uniform1f(this.uniforms.audioMid, audioMid);
 
         // MVEP-style audio-reactive parameters
         this.gl.uniform1f(this.uniforms.moireScale, this.params.moireScale || 1.01);
