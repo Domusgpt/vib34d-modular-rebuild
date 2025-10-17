@@ -33,11 +33,11 @@ export class VisualStylePanel {
         // Create panel with 2 tabs
         this.panel = new CollapsibleDraggablePanel({
             id: 'visual-style',
-            title: 'VISUAL STYLE',
+            title: 'VISUAL STYLE - COLORS & EFFECTS',
             icon: '🎨',
-            defaultPosition: 'auto',
-            defaultSize: { width: 320, height: 'auto' },
-            defaultCollapsed: true, // Start collapsed
+            defaultPosition: { top: 440, right: 10 }, // Below Transform panel
+            defaultSize: { width: 340, height: 'auto' },
+            defaultCollapsed: false, // START EXPANDED
             collapsible: true,
             draggable: true,
             tabs: [
@@ -120,13 +120,13 @@ export class VisualStylePanel {
                 decimals: 1
             });
 
-            // Effects Tab Sliders
+            // Effects Tab Sliders - DEFAULTS TO 0 TO NOT INTERFERE WITH FACETED GEOMETRIES
             this.createSlider('moireScale', {
                 label: 'Moire Scale',
                 min: 0,
                 max: 2,
                 step: 0.01,
-                defaultValue: 0.5,
+                defaultValue: 0.0, // START AT 0 - no interference
                 unit: '',
                 decimals: 2
             });
@@ -136,7 +136,7 @@ export class VisualStylePanel {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                defaultValue: 0.0,
+                defaultValue: 0.0, // START AT 0 - no interference
                 unit: '',
                 decimals: 2
             });

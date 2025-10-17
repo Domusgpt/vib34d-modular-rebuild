@@ -35,11 +35,11 @@ export class AudioPanel {
         // Create panel with 3 tabs
         this.panel = new CollapsibleDraggablePanel({
             id: 'audio',
-            title: 'AUDIO',
+            title: 'AUDIO - INPUT & REACTIVITY',
             icon: '🔊',
-            defaultPosition: 'auto',
-            defaultSize: { width: 320, height: 'auto' },
-            defaultCollapsed: true, // Start collapsed
+            defaultPosition: { top: 440, left: 10 }, // Left side, below XY Control
+            defaultSize: { width: 340, height: 'auto' },
+            defaultCollapsed: false, // START EXPANDED
             collapsible: true,
             draggable: true,
             tabs: [
@@ -47,7 +47,7 @@ export class AudioPanel {
                 { id: 'reactive', label: 'Reactive', content: this.createReactiveTab() },
                 { id: 'status', label: 'Status', content: this.createStatusTab() }
             ],
-            zIndex: 1000
+            zIndex: 998
         });
 
         // Wire up controls after panel is created

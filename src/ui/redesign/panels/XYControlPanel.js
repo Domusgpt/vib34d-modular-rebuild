@@ -37,17 +37,17 @@ export class XYControlPanel {
         // Create panel with XY pad content
         this.panel = new CollapsibleDraggablePanel({
             id: 'xy-control',
-            title: 'XY CONTROL',
+            title: 'XY CONTROL - TOUCHPAD',
             icon: '🎯',
-            defaultPosition: 'auto',
-            defaultSize: { width: 320, height: 'auto' },
-            defaultCollapsed: true, // Start collapsed
+            defaultPosition: { top: 60, left: 10 }, // Left side of screen
+            defaultSize: { width: 340, height: 'auto' },
+            defaultCollapsed: false, // START EXPANDED
             collapsible: true,
             draggable: true,
             tabs: [
                 { id: 'xypad', label: 'XY Pad', content: this.createXYPadTab() }
             ],
-            zIndex: 1001 // Higher than other panels
+            zIndex: 999 // Below other panels
         });
 
         // Wire up touchpad after panel is created
