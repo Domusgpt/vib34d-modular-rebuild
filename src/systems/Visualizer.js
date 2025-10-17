@@ -814,22 +814,38 @@ void main() {
         this.gl.uniform1f(this.uniforms.time, time);
         this.gl.uniform2f(this.uniforms.mouse, this.mouseX, this.mouseY);
         this.gl.uniform1f(this.uniforms.geometry, this.params.geometry);
-        // 🎵 DIRECT AUDIO REACTIVITY - Simple and works
+
+        // 🎵 ENHANCED AUDIO REACTIVITY - Rich, musical, volumetric
         let gridDensity = this.params.gridDensity;
+        let morphFactor = this.params.morphFactor;
+        let chaos = this.params.chaos;
+        let speed = this.params.speed;
         let hue = this.params.hue;
         let intensity = this.params.intensity;
-        
+        let glitchIntensity = this.params.glitchIntensity || 0.05;
+
         if (window.audioEnabled && window.audioReactive) {
-            // Faceted audio mapping: Bass affects grid density, Mid affects hue, High affects intensity
-            gridDensity += window.audioReactive.bass * 30;  // Bass makes patterns denser
-            hue += window.audioReactive.mid * 60;           // Mid frequencies shift colors
-            intensity += window.audioReactive.high * 0.4;   // High frequencies brighten
+            const audio = window.audioReactive;
+
+            // Holographic audio mapping: Create volumetric reactive space
+            gridDensity += audio.bass * 50;              // Bass creates density in holographic layers
+            morphFactor += audio.mid * 1.5;              // Mid frequencies morph the geometry
+            speed += audio.high * 2.5;                   // High frequencies speed up animation
+            chaos += audio.energy * 0.8;                 // Energy creates chaotic holographic distortion
+            hue += (audio.bass * 45 + audio.mid * 30);   // Bass + Mid affect holographic color shifts
+            intensity += audio.high * 0.6;               // High frequencies brighten
+            glitchIntensity += audio.energy * 0.3;       // Energy adds glitch effects
+
+            // Beat pulse effect - make visualization react to rhythm
+            if (audio.bass > 0.7 || audio.energy > 0.8) {
+                this.clickIntensity = Math.max(this.clickIntensity, 0.8);
+            }
         }
-        
+
         this.gl.uniform1f(this.uniforms.gridDensity, Math.min(100, gridDensity));
-        this.gl.uniform1f(this.uniforms.morphFactor, this.params.morphFactor);
-        this.gl.uniform1f(this.uniforms.chaos, this.params.chaos);
-        this.gl.uniform1f(this.uniforms.speed, this.params.speed);
+        this.gl.uniform1f(this.uniforms.morphFactor, Math.min(5, morphFactor));
+        this.gl.uniform1f(this.uniforms.chaos, Math.min(3, chaos));
+        this.gl.uniform1f(this.uniforms.speed, Math.min(10, speed));
         this.gl.uniform1f(this.uniforms.hue, hue % 360);
         this.gl.uniform1f(this.uniforms.intensity, Math.min(1, intensity));
         this.gl.uniform1f(this.uniforms.saturation, this.params.saturation);
@@ -859,8 +875,11 @@ void main() {
 
         // MVEP-style audio-reactive parameters
         this.gl.uniform1f(this.uniforms.moireScale, this.params.moireScale || 1.01);
-        this.gl.uniform1f(this.uniforms.glitchIntensity, this.params.glitchIntensity || 0.05);
+        this.gl.uniform1f(this.uniforms.glitchIntensity, Math.min(2, glitchIntensity));
         this.gl.uniform1f(this.uniforms.lineThickness, this.params.lineThickness || 0.02);
+
+        // Decay click intensity for beat pulses
+        this.clickIntensity *= 0.92;
 
         try {
             this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);

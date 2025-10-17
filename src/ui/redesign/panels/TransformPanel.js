@@ -5,10 +5,10 @@
  * 4D Rotation Tab:
  * - XY Rotation (-180 to 180)
  * - XZ Rotation (-180 to 180)
- * - XW Rotation (-180 to 180)
+ * - XW Rotation (-180 to 180) - 4D
  * - YZ Rotation (-180 to 180)
- * - YW Rotation (-180 to 180)
- * - ZW Rotation (-180 to 180)
+ * - YW Rotation (-180 to 180) - 4D
+ * - ZW Rotation (-180 to 180) - 4D
  */
 
 import { CollapsibleDraggablePanel } from '../components/CollapsibleDraggablePanel.js';
@@ -50,12 +50,12 @@ export class TransformPanel {
     createRotationTab() {
         return `
             <div class="tab-section">
-                <div id="slider-rotationXY-container"></div>
-                <div id="slider-rotationXZ-container"></div>
-                <div id="slider-rotationXW-container"></div>
-                <div id="slider-rotationYZ-container"></div>
-                <div id="slider-rotationYW-container"></div>
-                <div id="slider-rotationZW-container"></div>
+                <div id="slider-rot4dXY-container"></div>
+                <div id="slider-rot4dXZ-container"></div>
+                <div id="slider-rot4dXW-container"></div>
+                <div id="slider-rot4dYZ-container"></div>
+                <div id="slider-rot4dYW-container"></div>
+                <div id="slider-rot4dZW-container"></div>
             </div>
         `;
     }
@@ -63,8 +63,8 @@ export class TransformPanel {
     setupSliders() {
         // Wait for DOM to be ready
         setTimeout(() => {
-            // 4D Rotation Sliders
-            this.createSlider('rotationXY', {
+            // 4D Rotation Sliders - FIXED: Use correct parameter names that match Choreographer
+            this.createSlider('rot4dXY', {
                 label: 'XY Rotation',
                 min: -180,
                 max: 180,
@@ -74,7 +74,7 @@ export class TransformPanel {
                 decimals: 0
             });
 
-            this.createSlider('rotationXZ', {
+            this.createSlider('rot4dXZ', {
                 label: 'XZ Rotation',
                 min: -180,
                 max: 180,
@@ -84,8 +84,8 @@ export class TransformPanel {
                 decimals: 0
             });
 
-            this.createSlider('rotationXW', {
-                label: 'XW Rotation',
+            this.createSlider('rot4dXW', {
+                label: 'XW Rotation (4D)',
                 min: -180,
                 max: 180,
                 step: 1,
@@ -94,7 +94,7 @@ export class TransformPanel {
                 decimals: 0
             });
 
-            this.createSlider('rotationYZ', {
+            this.createSlider('rot4dYZ', {
                 label: 'YZ Rotation',
                 min: -180,
                 max: 180,
@@ -104,8 +104,8 @@ export class TransformPanel {
                 decimals: 0
             });
 
-            this.createSlider('rotationYW', {
-                label: 'YW Rotation',
+            this.createSlider('rot4dYW', {
+                label: 'YW Rotation (4D)',
                 min: -180,
                 max: 180,
                 step: 1,
@@ -114,8 +114,8 @@ export class TransformPanel {
                 decimals: 0
             });
 
-            this.createSlider('rotationZW', {
-                label: 'ZW Rotation',
+            this.createSlider('rot4dZW', {
+                label: 'ZW Rotation (4D)',
                 min: -180,
                 max: 180,
                 step: 1,
@@ -140,9 +140,11 @@ export class TransformPanel {
             unit: config.unit,
             decimals: config.decimals,
             onChange: (name, value) => {
+                // Convert degrees to radians for shader
+                const radians = (value * Math.PI) / 180.0;
                 // Update choreographer when slider changes
-                this.choreographer.setParameter(name, value);
-                console.log(`Transform: ${name} = ${value}`);
+                this.choreographer.setParameter(name, radians);
+                console.log(`Transform: ${name} = ${value}° (${radians.toFixed(3)} rad)`);
             }
         });
 
@@ -165,7 +167,9 @@ export class TransformPanel {
         Object.keys(this.sliders).forEach(paramName => {
             const value = this.choreographer.baseParams[paramName];
             if (value !== undefined && this.sliders[paramName]) {
-                this.sliders[paramName].setValue(value);
+                // Convert radians back to degrees for display
+                const degrees = (value * 180.0) / Math.PI;
+                this.sliders[paramName].setValue(degrees);
             }
         });
     }
