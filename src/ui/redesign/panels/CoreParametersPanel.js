@@ -53,7 +53,39 @@ export class CoreParametersPanel {
     createGeometryTab() {
         return `
             <div class="tab-section">
-                <div id="slider-geometry-container"></div>
+                <div class="param-group" style="margin-bottom: 16px;">
+                    <label class="param-label" style="display: block; margin-bottom: 6px; color: #00ffff; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        🔮 Polytope Core
+                    </label>
+                    <select id="polytope-core-select" class="vib-dropdown" style="width: 100%; padding: 8px 12px; background: rgba(0, 255, 255, 0.05); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 6px; color: #00ffff; font-size: 12px; font-family: 'Orbitron', monospace; cursor: pointer; transition: all 0.3s ease;">
+                        <option value="0">Hypercube (Standard Lattice)</option>
+                        <option value="1">Hypersphere (Spherical Warping)</option>
+                        <option value="2">Hypertetrahedron (Tetrahedral Planes)</option>
+                    </select>
+                </div>
+
+                <div class="param-group" style="margin-bottom: 16px;">
+                    <label class="param-label" style="display: block; margin-bottom: 6px; color: #00ffff; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        🎨 Geometry Style
+                    </label>
+                    <select id="geometry-style-select" class="vib-dropdown" style="width: 100%; padding: 8px 12px; background: rgba(0, 255, 255, 0.05); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 6px; color: #00ffff; font-size: 12px; font-family: 'Orbitron', monospace; cursor: pointer; transition: all 0.3s ease;">
+                        <option value="0">Tetrahedron</option>
+                        <option value="1">Hypercube</option>
+                        <option value="2">Sphere</option>
+                        <option value="3">Torus</option>
+                        <option value="4">Klein Bottle</option>
+                        <option value="5">Fractal</option>
+                        <option value="6">Wave</option>
+                        <option value="7">Crystal</option>
+                    </select>
+                </div>
+
+                <div class="param-group" style="margin-bottom: 8px; padding: 8px 12px; background: rgba(0, 255, 255, 0.03); border-radius: 6px; border: 1px solid rgba(0, 255, 255, 0.2);">
+                    <div style="color: #00ffff; font-size: 10px; font-family: 'Orbitron', monospace; opacity: 0.7; text-align: center;" id="geometry-name-display">
+                        Hypercube Tetrahedron
+                    </div>
+                </div>
+
                 <div id="slider-gridDensity-container"></div>
                 <div id="slider-morphFactor-container"></div>
                 <div id="slider-lineThickness-container"></div>
@@ -73,17 +105,10 @@ export class CoreParametersPanel {
     setupSliders() {
         // Wait for DOM to be ready
         setTimeout(() => {
-            // Geometry Tab Sliders
-            this.createSlider('geometry', {
-                label: 'Geometry Type',
-                min: 1,
-                max: 24,
-                step: 1,
-                defaultValue: 1,
-                unit: '',
-                decimals: 0
-            });
+            // Setup polytope core and geometry style dropdowns
+            this.setupPolytopeSelectors();
 
+            // Geometry Tab Sliders
             this.createSlider('gridDensity', {
                 label: 'Grid Density',
                 min: 1,
@@ -169,6 +194,57 @@ export class CoreParametersPanel {
         }
     }
 
+    setupPolytopeSelectors() {
+        const coreSelect = document.getElementById('polytope-core-select');
+        const styleSelect = document.getElementById('geometry-style-select');
+        const nameDisplay = document.getElementById('geometry-name-display');
+
+        if (!coreSelect || !styleSelect) {
+            console.warn('Polytope selectors not found in DOM');
+            return;
+        }
+
+        // Get core names for display
+        const coreNames = ['Hypercube', 'Hypersphere', 'Hypertetrahedron'];
+        const styleNames = ['Tetrahedron', 'Hypercube', 'Sphere', 'Torus', 'Klein Bottle', 'Fractal', 'Wave', 'Crystal'];
+
+        const updateGeometry = () => {
+            const coreIndex = parseInt(coreSelect.value);
+            const styleIndex = parseInt(styleSelect.value);
+
+            // Calculate geometry type: styleIndex + (coreIndex * 8)
+            const geometryType = styleIndex + (coreIndex * 8);
+
+            // Update choreographer
+            this.choreographer.setParameter('geometry', geometryType);
+
+            // Update display name
+            if (nameDisplay) {
+                nameDisplay.textContent = `${coreNames[coreIndex]} ${styleNames[styleIndex]}`;
+            }
+
+            console.log(`Polytope: Core=${coreNames[coreIndex]}, Style=${styleNames[styleIndex]}, Type=${geometryType}`);
+        };
+
+        // Add change listeners
+        coreSelect.addEventListener('change', updateGeometry);
+        styleSelect.addEventListener('change', updateGeometry);
+
+        // Initialize from current geometry value
+        if (this.choreographer && this.choreographer.baseParams) {
+            const currentGeometry = this.choreographer.baseParams.geometry || 0;
+            const currentCore = Math.floor(currentGeometry / 8);
+            const currentStyle = currentGeometry % 8;
+
+            coreSelect.value = currentCore;
+            styleSelect.value = currentStyle;
+
+            if (nameDisplay) {
+                nameDisplay.textContent = `${coreNames[currentCore]} ${styleNames[currentStyle]}`;
+            }
+        }
+    }
+
     syncFromChoreographer() {
         // Update all sliders from choreographer's current values
         if (!this.choreographer || !this.choreographer.baseParams) return;
@@ -179,6 +255,27 @@ export class CoreParametersPanel {
                 this.sliders[paramName].setValue(value);
             }
         });
+
+        // Update polytope selectors
+        const coreSelect = document.getElementById('polytope-core-select');
+        const styleSelect = document.getElementById('geometry-style-select');
+        const nameDisplay = document.getElementById('geometry-name-display');
+
+        if (coreSelect && styleSelect && this.choreographer.baseParams.geometry !== undefined) {
+            const currentGeometry = this.choreographer.baseParams.geometry;
+            const currentCore = Math.floor(currentGeometry / 8);
+            const currentStyle = currentGeometry % 8;
+
+            coreSelect.value = currentCore;
+            styleSelect.value = currentStyle;
+
+            const coreNames = ['Hypercube', 'Hypersphere', 'Hypertetrahedron'];
+            const styleNames = ['Tetrahedron', 'Hypercube', 'Sphere', 'Torus', 'Klein Bottle', 'Fractal', 'Wave', 'Crystal'];
+
+            if (nameDisplay) {
+                nameDisplay.textContent = `${coreNames[currentCore]} ${styleNames[currentStyle]}`;
+            }
+        }
     }
 
     startUpdateLoop() {
