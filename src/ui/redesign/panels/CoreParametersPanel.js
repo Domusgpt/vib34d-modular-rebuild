@@ -29,18 +29,18 @@ export class CoreParametersPanel {
         // Create panel with 2 tabs
         this.panel = new CollapsibleDraggablePanel({
             id: 'core-params',
-            title: 'CORE PARAMETERS',
+            title: 'CORE PARAMETERS - POLYTOPES HERE',
             icon: '🎛️',
-            defaultPosition: 'auto',
-            defaultSize: { width: 320, height: 'auto' },
-            defaultCollapsed: false, // Start expanded (main panel)
+            defaultPosition: { top: 60, right: 700 },
+            defaultSize: { width: 340, height: 'auto' },
+            defaultCollapsed: false, // START EXPANDED
             collapsible: true,
             draggable: true,
             tabs: [
                 { id: 'geometry', label: 'Geometry', content: this.createGeometryTab() },
                 { id: 'motion', label: 'Motion', content: this.createMotionTab() }
             ],
-            zIndex: 1000
+            zIndex: 1002  // Highest
         });
 
         // Wire up sliders after panel is created

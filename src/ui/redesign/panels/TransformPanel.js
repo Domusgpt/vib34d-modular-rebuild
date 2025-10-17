@@ -27,17 +27,17 @@ export class TransformPanel {
         // Create panel with 1 tab
         this.panel = new CollapsibleDraggablePanel({
             id: 'transform',
-            title: 'TRANSFORM',
+            title: 'TRANSFORM - ALL 6 ROTATIONS',
             icon: '🔄',
-            defaultPosition: 'auto',
-            defaultSize: { width: 320, height: 'auto' },
-            defaultCollapsed: true, // Start collapsed
+            defaultPosition: { top: 60, right: 350 },
+            defaultSize: { width: 340, height: 'auto' },
+            defaultCollapsed: false, // START EXPANDED
             collapsible: true,
             draggable: true,
             tabs: [
                 { id: 'rotation', label: '4D Rotation', content: this.createRotationTab() }
             ],
-            zIndex: 1000
+            zIndex: 1001  // Higher than core panel
         });
 
         // Wire up sliders after panel is created
