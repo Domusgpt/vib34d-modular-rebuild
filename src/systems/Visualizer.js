@@ -261,32 +261,36 @@ vec4 applyInteractiveRotation(vec4 pos, vec2 mouseOffset, float scrollRotation, 
     float timeFactor = u_time * 0.0004 * u_speed;
     float audioOffset = (u_chaos + u_morphFactor) * 0.2;
 
-    pos = rotateXY(u_rot4dXY + timeFactor * 0.18 + mouseOffset.x * 0.4 + scrollRotation * 0.15) * pos;
-    pos = rotateXZ(u_rot4dXZ + timeFactor * 0.16 + mouseOffset.y * 0.35 + touchRotation * 0.2) * pos;
-    pos = rotateYZ(u_rot4dYZ + timeFactor * 0.12 + u_clickIntensity * 0.2) * pos;
-    pos = rotateXW(u_rot4dXW + timeFactor * 0.2 + mouseOffset.y * 0.5 + scrollRotation) * pos;
-    pos = rotateYW(u_rot4dYW + timeFactor * 0.15 + mouseOffset.x * 0.5 + touchRotation) * pos;
-    pos = rotateZW(u_rot4dZW + timeFactor * 0.25 + u_clickIntensity * 0.3 + audioOffset) * pos;
+    // AMPLIFIED MANUAL ROTATIONS - User control is 5x stronger than auto-rotation
+    pos = rotateXY(u_rot4dXY * 5.0 + timeFactor * 0.18 + mouseOffset.x * 0.4 + scrollRotation * 0.15) * pos;
+    pos = rotateXZ(u_rot4dXZ * 5.0 + timeFactor * 0.16 + mouseOffset.y * 0.35 + touchRotation * 0.2) * pos;
+    pos = rotateYZ(u_rot4dYZ * 5.0 + timeFactor * 0.12 + u_clickIntensity * 0.2) * pos;
+    pos = rotateXW(u_rot4dXW * 5.0 + timeFactor * 0.2 + mouseOffset.y * 0.5 + scrollRotation) * pos;
+    pos = rotateYW(u_rot4dYW * 5.0 + timeFactor * 0.15 + mouseOffset.x * 0.5 + touchRotation) * pos;
+    pos = rotateZW(u_rot4dZW * 5.0 + timeFactor * 0.25 + u_clickIntensity * 0.3 + audioOffset) * pos;
     return pos;
 }
 
-// Hypersphere core warping (coreIndex = 1)
+// Hypersphere core warping (coreIndex = 1) - AMPLIFIED
 vec3 warpHypersphereCore(vec3 p, int geometryIndex, vec2 mouseOffset, float scrollRotation, float touchRotation) {
     float radius = length(p);
     float morphBlend = clamp(u_morphFactor + u_audioMid * 0.5, 0.0, 2.0);
     float audioLift = (u_audioHigh * 0.5 + u_audioMid * 0.35);
-    float w = sin(radius * (1.4 + float(geometryIndex) * 0.1) + u_time * 0.0015 * u_speed);
-    w *= (0.35 + morphBlend * 0.4 + audioLift);
 
-    vec4 p4d = vec4(p * (1.0 + morphBlend * 0.25), w);
+    // AMPLIFIED: Stronger radial oscillation and W coordinate
+    float w = sin(radius * (2.0 + float(geometryIndex) * 0.15) + u_time * 0.002 * u_speed);
+    w *= (0.8 + morphBlend * 0.8 + audioLift);  // 2x stronger
+
+    vec4 p4d = vec4(p * (1.0 + morphBlend * 0.5), w);
     p4d = applyInteractiveRotation(p4d, mouseOffset, scrollRotation, touchRotation);
     vec3 projected = project4Dto3D(p4d);
 
-    float blend = clamp(0.35 + morphBlend * 0.35, 0.0, 1.0);
+    // AMPLIFIED: Much stronger blending - spherical warping is obvious
+    float blend = clamp(0.7 + morphBlend * 0.3, 0.0, 1.0);
     return mix(p, projected, blend);
 }
 
-// Hypertetrahedron core warping (coreIndex = 2)
+// Hypertetrahedron core warping (coreIndex = 2) - AMPLIFIED
 vec3 warpHypertetraCore(vec3 p, int geometryIndex, vec2 mouseOffset, float scrollRotation, float touchRotation) {
     vec3 c1 = normalize(vec3(1.0, 1.0, 1.0));
     vec3 c2 = normalize(vec3(-1.0, -1.0, 1.0));
@@ -294,19 +298,23 @@ vec3 warpHypertetraCore(vec3 p, int geometryIndex, vec2 mouseOffset, float scrol
     vec3 c4 = normalize(vec3(1.0, -1.0, -1.0));
 
     float morphBlend = clamp(u_morphFactor * 0.8 + u_audioHigh * 0.4, 0.0, 2.0);
-    float basisMix = dot(p, c1) * 0.12 + dot(p, c2) * 0.08 + dot(p, c3) * 0.05;
-    float w = sin(basisMix * 6.0 + u_time * 0.0012 * u_speed);
-    w *= cos(dot(p, c4) * 4.5 - u_time * 0.0010 * u_speed);
-    w *= (0.45 + morphBlend * 0.35 + u_audioHigh * 0.3);
 
-    vec3 offset = vec3(dot(p, c1), dot(p, c2), dot(p, c3)) * 0.12 * morphBlend;
+    // AMPLIFIED: Stronger tetrahedral basis mixing
+    float basisMix = dot(p, c1) * 0.25 + dot(p, c2) * 0.18 + dot(p, c3) * 0.12;
+    float w = sin(basisMix * 8.0 + u_time * 0.0015 * u_speed);
+    w *= cos(dot(p, c4) * 6.0 - u_time * 0.0012 * u_speed);
+    w *= (0.9 + morphBlend * 0.7 + u_audioHigh * 0.5);  // 2x stronger
+
+    // AMPLIFIED: Stronger offset for tetrahedral structure
+    vec3 offset = vec3(dot(p, c1), dot(p, c2), dot(p, c3)) * 0.25 * morphBlend;
     vec4 p4d = vec4(p + offset, w);
     p4d = applyInteractiveRotation(p4d, mouseOffset, scrollRotation, touchRotation);
     vec3 projected = project4Dto3D(p4d);
 
+    // AMPLIFIED: Much stronger tetrahedral plane influence
     float planeInfluence = min(min(abs(dot(p, c1)), abs(dot(p, c2))), min(abs(dot(p, c3)), abs(dot(p, c4))));
-    vec3 blended = mix(p, projected, clamp(0.4 + morphBlend * 0.4, 0.0, 1.0));
-    return mix(blended, blended * (1.0 - planeInfluence * 0.6), 0.25 + morphBlend * 0.15);
+    vec3 blended = mix(p, projected, clamp(0.75 + morphBlend * 0.25, 0.0, 1.0));
+    return mix(blended, blended * (1.0 - planeInfluence * 0.9), 0.6 + morphBlend * 0.4);
 }
 
 // Core warp dispatcher

@@ -40,9 +40,14 @@ export class Choreographer {
             hue: 200,
             intensity: 0.5,
             saturation: 0.8,
-            rot4dXW: 0.0,
-            rot4dYW: 0.0,
-            rot4dZW: 0.0,
+
+            // ALL 6 4D ROTATION PLANES
+            rot4dXY: 0.0,  // 3D rotation - X-Y plane
+            rot4dXZ: 0.0,  // 3D rotation - X-Z plane
+            rot4dYZ: 0.0,  // 3D rotation - Y-Z plane
+            rot4dXW: 0.0,  // 4D rotation - X-W plane
+            rot4dYW: 0.0,  // 4D rotation - Y-W plane
+            rot4dZW: 0.0,  // 4D rotation - Z-W plane
 
             // MVEP-style audio reactivity enhancements
             moireScale: 1.01,           // Moiré interference pattern (0.95-1.05)
