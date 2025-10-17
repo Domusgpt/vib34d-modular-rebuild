@@ -22,7 +22,15 @@ import { VisualizerXYPad } from './ui/VisualizerXYPad.js';
 // 🧪 TEST: New UI Redesign Components
 import { initTestUI } from './ui/redesign/test-core-panel.js';
 
+// 📱 Mobile UI Components
+import { MobileControlDrawer } from './ui/mobile/MobileControlDrawer.js';
+import './ui/mobile/MobileControlDrawer.css';
+
+// Detect if mobile device
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1025;
+
 console.log('🎬 VIB34D Timeline Loading...');
+console.log(isMobile ? '📱 Mobile device detected' : '🖥️ Desktop device detected');
 console.log('✅ RecordingEngine loaded');
 console.log('✅ AudioAnalyzer loaded');
 console.log('✅ Choreographer loaded');
@@ -88,15 +96,26 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         console.log('✅ All UI components initialized');
 
-        // 🧪 Initialize new UI redesign system (all 5 panels)
-        console.log('🧪 Initializing complete UI Redesign system...');
-        window.testUI = initTestUI(choreographer);
-        console.log('✅ Complete UI Redesign system initialized');
-        console.log('   📦 5 panels created (check right side)');
-        console.log('   🎯 Status badge (bottom-right corner)');
-        console.log('   ➕ Canvas crosshair (move cursor)');
-        console.log('   🖱️ Drag panels by header');
-        console.log('   🔄 Double-click header to collapse/expand');
+        // Initialize appropriate UI based on device type
+        if (isMobile) {
+            // 📱 Mobile: Use touch-friendly bottom drawer
+            console.log('📱 Initializing Mobile Control Drawer...');
+            window.mobileDrawer = new MobileControlDrawer(choreographer);
+            console.log('✅ Mobile UI initialized');
+            console.log('   👆 Swipe up from bottom to access controls');
+            console.log('   🎯 4 tabs: Quick, Geometry, Rotation, Style');
+            console.log('   📐 Large touch targets (48px minimum)');
+        } else {
+            // 🖥️ Desktop: Use draggable panel system
+            console.log('🧪 Initializing Desktop Panel System...');
+            window.testUI = initTestUI(choreographer);
+            console.log('✅ Desktop UI initialized');
+            console.log('   📦 5 panels created (check right side)');
+            console.log('   🎯 Status badge (bottom-right corner)');
+            console.log('   ➕ Canvas crosshair (move cursor)');
+            console.log('   🖱️ Drag panels by header');
+            console.log('   🔄 Double-click header to collapse/expand');
+        }
 
         // Make modules available for debugging
         window.VIB34D_MODULES = MODULES_LOADED;
@@ -104,7 +123,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         console.log('🔧 Debug: window.choreographer available');
         console.log('🔧 Debug: window.integratedControls available');
         console.log('🔧 Debug: window.visualsMenu available');
-        console.log('🔧 Debug: window.testUI available (new design)');
+        console.log(isMobile ? '🔧 Debug: window.mobileDrawer available' : '🔧 Debug: window.testUI available (desktop panels)');
 
     } catch (error) {
         console.error('❌ Failed to initialize:', error);

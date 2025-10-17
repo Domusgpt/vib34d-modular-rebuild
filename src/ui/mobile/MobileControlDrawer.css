@@ -1,0 +1,361 @@
+/**
+ * Mobile Control Drawer - Touch-friendly UI for mobile devices
+ * Bottom sheet interface with swipe gestures
+ */
+
+.mobile-drawer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, rgba(10, 0, 30, 0.98) 0%, rgba(5, 0, 15, 0.99) 100%);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -10px 40px rgba(0, 255, 255, 0.2);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 10000;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* Drawer States */
+.mobile-drawer.closed {
+    transform: translateY(calc(100% - 60px)); /* Show only handle */
+}
+
+.mobile-drawer.open {
+    transform: translateY(0); /* Show 50% */
+}
+
+.mobile-drawer.fullscreen {
+    transform: translateY(0);
+    max-height: 95vh;
+}
+
+/* Drawer Handle */
+.drawer-handle {
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.handle-bar {
+    width: 48px;
+    height: 5px;
+    background: rgba(0, 255, 255, 0.4);
+    border-radius: 3px;
+    margin-bottom: 8px;
+    transition: background 0.2s ease;
+}
+
+.drawer-handle:active .handle-bar {
+    background: rgba(0, 255, 255, 0.7);
+}
+
+.handle-label {
+    color: #00ffff;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Tab Navigation */
+.drawer-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tab-button {
+    flex: 1;
+    min-width: 80px;
+    padding: 16px 12px;
+    background: transparent;
+    border: none;
+    color: rgba(0, 255, 255, 0.5);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Orbitron', monospace;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.tab-button.active {
+    color: #00ffff;
+    background: rgba(0, 255, 255, 0.1);
+    border-bottom-color: #00ffff;
+}
+
+.tab-button:active {
+    background: rgba(0, 255, 255, 0.2);
+}
+
+/* Drawer Content */
+.drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Control Groups */
+.control-group {
+    margin-bottom: 24px;
+}
+
+.control-group label {
+    display: block;
+    color: #00ffff;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Orbitron', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Mobile Sliders */
+.mobile-slider {
+    width: 100%;
+    height: 48px; /* Large touch target */
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    margin: 8px 0;
+}
+
+.mobile-slider::-webkit-slider-track {
+    width: 100%;
+    height: 12px;
+    background: linear-gradient(90deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 255, 255, 0.2) 100%);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.mobile-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #00ffff 0%, #0088ff 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 255, 255, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    margin-top: -12px;
+}
+
+.mobile-slider:active::-webkit-slider-thumb {
+    box-shadow: 0 6px 20px rgba(0, 255, 255, 0.8);
+    transform: scale(1.1);
+}
+
+/* Firefox */
+.mobile-slider::-moz-range-track {
+    width: 100%;
+    height: 12px;
+    background: linear-gradient(90deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 255, 255, 0.2) 100%);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.mobile-slider::-moz-range-thumb {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #00ffff 0%, #0088ff 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 255, 255, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.slider-value {
+    display: inline-block;
+    color: #00ffff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Orbitron', monospace;
+    padding: 8px 16px;
+    background: rgba(0, 255, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    min-width: 60px;
+    text-align: center;
+    margin-left: 12px;
+}
+
+/* Button Groups */
+.button-group {
+    display: flex;
+    gap: 8px;
+}
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.toggle-button {
+    padding: 14px 12px;
+    background: rgba(0, 255, 255, 0.05);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 10px;
+    color: rgba(0, 255, 255, 0.6);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Orbitron', monospace;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 48px; /* Touch target */
+}
+
+.toggle-button.active {
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.3) 0%, rgba(0, 255, 255, 0.2) 100%);
+    border-color: #00ffff;
+    color: #00ffff;
+    box-shadow: 0 4px 12px rgba(0, 255, 255, 0.3);
+}
+
+.toggle-button:active {
+    transform: scale(0.95);
+    background: rgba(0, 255, 255, 0.2);
+}
+
+/* Quick Grid */
+.quick-grid,
+.rotation-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Reset Button */
+.reset-button {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(255, 0, 100, 0.3) 0%, rgba(255, 0, 150, 0.2) 100%);
+    border: 2px solid rgba(255, 0, 100, 0.5);
+    border-radius: 12px;
+    color: #ff0064;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Orbitron', monospace;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 20px;
+    min-height: 48px;
+}
+
+.reset-button:active {
+    transform: scale(0.98);
+    background: rgba(255, 0, 100, 0.4);
+}
+
+/* Fullscreen Toggle */
+.fullscreen-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 255, 255, 0.2);
+    border: 2px solid rgba(0, 255, 255, 0.4);
+    border-radius: 50%;
+    color: #00ffff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-toggle:active {
+    background: rgba(0, 255, 255, 0.4);
+    transform: scale(0.9);
+}
+
+.fullscreen-toggle .collapse-icon {
+    display: none;
+}
+
+.mobile-drawer.fullscreen .fullscreen-toggle .expand-icon {
+    display: none;
+}
+
+.mobile-drawer.fullscreen .fullscreen-toggle .collapse-icon {
+    display: block;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+    .button-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .toggle-button {
+        font-size: 11px;
+        padding: 12px 8px;
+    }
+
+    .tab-button {
+        font-size: 10px;
+        padding: 14px 8px;
+    }
+
+    .drawer-content {
+        padding: 16px;
+    }
+}
+
+/* Tablet */
+@media (min-width: 601px) and (max-width: 1024px) {
+    .mobile-drawer {
+        max-width: 600px;
+        left: 50%;
+        transform: translateX(-50%) translateY(calc(100% - 60px));
+    }
+
+    .mobile-drawer.open {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .mobile-drawer.fullscreen {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Desktop - hide mobile drawer, show desktop panels instead */
+@media (min-width: 1025px) {
+    .mobile-drawer {
+        display: none;
+    }
+}

@@ -204,6 +204,31 @@ uniform float u_rot4dYZ;
 uniform float u_audioHigh;
 uniform float u_audioMid;
 
+// 3D rotation matrices for faceted geometry rotation
+mat3 rotate3DXY(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(c, -s, 0.0,
+                s,  c, 0.0,
+                0.0, 0.0, 1.0);
+}
+
+mat3 rotate3DXZ(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(c, 0.0, -s,
+                0.0, 1.0, 0.0,
+                s, 0.0,  c);
+}
+
+mat3 rotate3DYZ(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(1.0, 0.0, 0.0,
+                0.0, c, -s,
+                0.0, s,  c);
+}
+
 // 6 Independent 4D rotation matrices
 mat4 rotateXY(float theta) {
     float c = cos(theta);
@@ -507,7 +532,14 @@ void main() {
     vec2 mouseOffset = (u_mouse - 0.5) * u_mouseIntensity * 2.0;
     pos3d.xy += mouseOffset;
 
-    // Apply polytope core warping
+    // CRITICAL FIX: Apply 3D rotations FIRST (for faceted geometry rotation)
+    // This makes tetrahedron, hypercube, etc. lattices actually rotate
+    float timeFactor = u_time * 0.0004 * u_speed;
+    pos3d = rotate3DXY(u_rot4dXY * 5.0 + timeFactor * 0.18) * pos3d;
+    pos3d = rotate3DXZ(u_rot4dXZ * 5.0 + timeFactor * 0.16) * pos3d;
+    pos3d = rotate3DYZ(u_rot4dYZ * 5.0 + timeFactor * 0.12) * pos3d;
+
+    // Apply polytope core warping (includes 4D rotations)
     vec3 warpedPos = applyCoreWarp(pos3d, u_geometry, mouseOffset, 0.0, 0.0);
 
     // Calculate geometry with polytope system
