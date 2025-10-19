@@ -9,6 +9,7 @@ export class LLMParameterUI {
         this.overlay = null;
         this.input = null;
         this.isProcessing = false;
+        this.contextProvider = null;
         
         this.exampleDescriptions = [
             // Emotional/Mood based
@@ -45,6 +46,12 @@ export class LLMParameterUI {
         ];
         
         this.init();
+    }
+
+    setContextProvider(provider) {
+        if (typeof provider === 'function') {
+            this.contextProvider = provider;
+        }
     }
     
     /**
@@ -530,12 +537,23 @@ export class LLMParameterUI {
         generateBtn.disabled = true;
         
         try {
-            const parameters = await this.llmInterface.generateParameters(description);
-            
-            this.showStatus('Parameters generated successfully!', 'success');
-            
+            const context = this.contextProvider ? this.contextProvider() : null;
+            const profile = await this.llmInterface.generateParameters(description, context);
+
+            const label = profile?.mood?.label || 'Sonic Mood';
+            const energy = profile?.metrics?.energy;
+            const palette = profile?.palette;
+            const energyText = typeof energy === 'number'
+                ? ` Energy ${(energy * 100).toFixed(0)}%.`
+                : '';
+            const paletteText = palette
+                ? ` Palette ${Math.round(palette.primaryHue)}°/${Math.round(palette.accentHue)}°.`
+                : '';
+
+            this.showStatus(`Mood "${label}" sculpted.${energyText}${paletteText}`, 'success');
+
             // Close after a short delay
-            setTimeout(() => this.hide(), 1500);
+            setTimeout(() => this.hide(), 1700);
             
         } catch (error) {
             console.error('Generation error:', error);

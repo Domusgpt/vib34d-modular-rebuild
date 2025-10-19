@@ -3,1293 +3,1882 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIB34D Music Choreographer - Modular Build</title>
+    <title>VIB34D Sonic Atlas</title>
     <style>
+        :root {
+            --glass-bg: rgba(7, 12, 26, 0.72);
+            --glass-highlight: rgba(43, 122, 255, 0.32);
+            --glass-border: rgba(120, 230, 255, 0.45);
+            --glass-border-strong: rgba(120, 230, 255, 0.75);
+            --neon-cyan: #4dfcff;
+            --neon-magenta: #ff72ff;
+            --neon-amber: #ffce6b;
+            --neon-lime: #8fffa8;
+            --depth-dark: #03040d;
+            --text-primary: rgba(230, 244, 255, 0.92);
+            --text-secondary: rgba(210, 235, 255, 0.65);
+            --text-muted: rgba(180, 220, 255, 0.42);
+            --shadow-strong: 0 34px 120px rgba(5, 15, 45, 0.65);
+            --shadow-soft: 0 18px 48px rgba(5, 15, 45, 0.35);
+            --panel-radius: 22px;
+            --hud-radius: 20px;
+            --section-gap: clamp(18px, 2.6vw, 42px);
+            --panel-gap: clamp(16px, 2vw, 32px);
+            --transition: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+            --font-heading: 'Space Grotesk', 'Rubik', 'Inter', sans-serif;
+            --font-body: 'Inter', 'IBM Plex Sans', sans-serif;
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Courier New', monospace;
-            background: #000;
-            color: #0ff;
-            overflow: hidden;
-        }
-
-        #stage-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 1;
-        }
-
-        /* Top control bar - COMPACT REDESIGN */
-        #top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.95);
-            border-bottom: 1px solid rgba(0, 255, 255, 0.4);
-            padding: 4px 10px;
-            z-index: 200;
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            background: radial-gradient(120% 120% at 18% 12%, rgba(80, 240, 255, 0.14), transparent 60%),
+                        radial-gradient(120% 120% at 82% 18%, rgba(255, 120, 255, 0.18), transparent 58%),
+                        linear-gradient(140deg, #02030f 0%, #020211 35%, #050821 100%);
+            min-height: 100vh;
             display: flex;
-            align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 2px 10px rgba(0, 255, 255, 0.1);
-            animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        #top-bar.minimized {
-            transform: translateY(-100%);
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        #top-bar .logo {
-            font-size: 12px;
-            font-weight: bold;
-            color: #0ff;
-            white-space: nowrap;
-            text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
-            letter-spacing: 1px;
-        }
-
-        #top-bar .divider {
-            width: 1px;
-            height: 30px;
-            background: rgba(0, 255, 255, 0.2);
-        }
-
-        #top-bar .control-section {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        #top-bar button {
-            padding: 6px 12px;
-            margin: 0;
-            width: auto;
-            font-size: 10px;
-            min-width: 60px;
-            height: 32px;
-        }
-
-        #top-bar input[type="file"] {
-            width: auto;
-            padding: 6px;
-            font-size: 9px;
-        }
-
-        #top-bar .status-text {
-            font-size: 9px;
-            opacity: 0.7;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* REDESIGNED CONTROL PANEL - FIXED SCROLLING */
-        #control-panel {
-            position: fixed;
-            top: 45px;
-            right: 10px;
-            width: 300px;
-            max-height: calc(100vh - 55px);
-            background: rgba(0, 0, 0, 0.92);
-            border: 1px solid rgba(0, 255, 255, 0.5);
-            padding: 12px;
-            z-index: 100;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
-            backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.12);
-            border-radius: 8px;
-            animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            transition: all 0.3s ease;
-            resize: both;
-            min-width: 250px;
-            min-height: 150px;
-        }
-
-        #control-panel.collapsed {
-            width: 40px;
-            height: 150px;
-            min-width: 40px;
-            min-height: 150px;
-            padding: 10px 6px;
-            overflow: visible;
-            resize: none;
-            cursor: pointer;
-            z-index: 150;
-            background: linear-gradient(180deg, rgba(0,255,255,0.3), rgba(0,200,255,0.5));
-            border-radius: 8px 0 0 8px;
-            border-right: 2px solid #0ff;
-            box-shadow: -2px 0 8px rgba(0,255,255,0.3);
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            display: flex;
-            align-items: center;
+            align-items: stretch;
             justify-content: center;
+            padding: clamp(16px, 2vw, 28px);
+            overflow-x: hidden;
         }
 
-        #control-panel.collapsed .panel-content {
-            display: none;
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(70% 80% at 50% -10%, rgba(90, 200, 255, 0.12), transparent 65%),
+                        radial-gradient(70% 80% at -10% 90%, rgba(255, 60, 160, 0.12), transparent 65%),
+                        radial-gradient(90% 90% at 110% 90%, rgba(80, 255, 210, 0.08), transparent 70%);
+            pointer-events: none;
+            z-index: -2;
+            filter: saturate(120%);
         }
 
-        #control-panel.collapsed .panel-collapse-btn {
-            position: static;
-            width: 100%;
-            height: 100%;
-            border-radius: 8px 0 0 8px;
-            font-size: 24px;
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), transparent 40%, transparent 60%, rgba(0, 0, 0, 0.45));
+            pointer-events: none;
+            z-index: -1;
         }
 
-        #control-panel::-webkit-resizer {
-            background: linear-gradient(135deg, transparent 50%, rgba(0, 255, 255, 0.5) 50%);
-            border-bottom-right-radius: 12px;
+        body.canvas-pad-hold {
+            background: radial-gradient(120% 120% at 18% 12%, rgba(80, 240, 255, 0.2), transparent 60%),
+                        radial-gradient(120% 120% at 82% 18%, rgba(255, 120, 255, 0.24), transparent 58%),
+                        linear-gradient(140deg, #02030f 0%, #04061a 38%, #070d28 100%);
         }
 
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        #control-panel h2 {
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: #0ff;
-            text-align: center;
-            border-bottom: 1px solid #0ff;
-            padding-bottom: 10px;
-        }
-
-        .control-group {
-            margin-bottom: 15px;
-        }
-
-        .control-group label {
-            display: block;
-            font-size: 10px;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            color: #0ff;
-        }
-
-        input[type="file"] {
-            width: 100%;
-            padding: 5px;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid #0ff;
-            color: #0ff;
-            font-size: 10px;
-            cursor: pointer;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 200, 255, 0.25));
-            border: 1px solid rgba(0, 255, 255, 0.5);
-            color: #0ff;
-            font-family: inherit;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-bottom: 5px;
-            border-radius: 6px;
+        #studio-shell {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            width: min(1800px, 100%);
+            min-height: calc(100vh - clamp(16px, 2vw, 28px) * 2);
+            border-radius: clamp(28px, 3vw, 42px);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(24px) saturate(140%);
+            border: 1px solid rgba(120, 230, 255, 0.12);
+            box-shadow: var(--shadow-strong);
         }
 
-        button::before {
+        #studio-shell::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+            inset: -2px;
+            background: linear-gradient(135deg, rgba(90, 210, 255, 0.18) 0%, rgba(255, 140, 240, 0.16) 45%, rgba(30, 40, 120, 0.28) 100%);
+            opacity: 0.65;
+            z-index: -1;
+            filter: blur(18px);
         }
 
-        button:hover::before {
-            left: 100%;
+        .studio-top-bar {
+            display: grid;
+            grid-template-columns: minmax(220px, 280px) minmax(220px, 300px) minmax(260px, 1fr) minmax(260px, 320px) minmax(260px, 340px);
+            align-items: center;
+            gap: clamp(14px, 2vw, 28px);
+            padding: clamp(18px, 2.4vw, 32px) clamp(28px, 3vw, 42px);
+            background: rgba(6, 10, 24, 0.82);
+            border-bottom: 1px solid rgba(120, 230, 255, 0.2);
+            box-shadow: inset 0 -1px 0 rgba(120, 230, 255, 0.12);
         }
 
-        button:hover {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(0, 200, 255, 0.4));
-            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-            border-color: #0ff;
-        }
-
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(0, 255, 255, 0.3);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .system-pills {
+        .brand-block {
             display: flex;
-            gap: 5px;
-            margin-bottom: 15px;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .brand-name {
+            font-family: var(--font-heading);
+            font-size: clamp(20px, 2.4vw, 30px);
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 28px rgba(77, 252, 255, 0.55);
+        }
+
+        .brand-subtitle {
+            font-size: clamp(12px, 1.4vw, 14px);
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            color: var(--text-muted);
+        }
+
+        .top-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .metric-chip {
+            background: linear-gradient(140deg, rgba(6, 12, 26, 0.92), rgba(16, 26, 52, 0.82));
+            border-radius: 14px;
+            padding: 14px 16px 12px;
+            border: 1px solid rgba(120, 230, 255, 0.22);
+            box-shadow: inset 0 0 12px rgba(90, 210, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 68px;
+        }
+
+        .metric-chip span {
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.24em;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-family: var(--font-heading);
+            font-size: clamp(18px, 2vw, 24px);
+        }
+
+        .metric-bar {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background: rgba(120, 230, 255, 0.12);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .metric-bar span {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, rgba(77, 252, 255, 0.1), rgba(77, 252, 255, 0.95));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 180ms ease, filter 180ms ease;
+        }
+
+        .system-switch {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
         }
 
         .system-pill {
-            flex: 1;
-            padding: 8px;
-            text-align: center;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid rgba(0, 255, 255, 0.4);
-            font-size: 9px;
+            background: linear-gradient(140deg, rgba(7, 14, 32, 0.8), rgba(18, 26, 48, 0.94));
+            border: 1px solid rgba(120, 230, 255, 0.28);
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            padding: 12px 18px;
+            border-radius: 999px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            border-radius: 4px;
+            transition: transform var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+            backdrop-filter: blur(12px);
+        }
+
+        .system-pill:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 18px 30px rgba(77, 252, 255, 0.22);
+        }
+
+        .system-pill.active {
+            border-color: var(--glass-border-strong);
+            color: var(--depth-dark);
+            background: linear-gradient(135deg, rgba(77, 252, 255, 0.95), rgba(90, 210, 255, 0.82));
+            box-shadow: 0 18px 36px rgba(77, 252, 255, 0.35);
+        }
+
+        .transport-cluster {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            align-items: center;
+        }
+
+        .transport-btn {
+            background: linear-gradient(160deg, rgba(8, 20, 38, 0.9), rgba(20, 36, 64, 0.9));
+            border: 1px solid rgba(120, 230, 255, 0.25);
+            border-radius: 16px;
+            padding: 12px 0;
+            color: var(--text-primary);
+            font-size: 14px;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            transition: transform var(--transition), background var(--transition), box-shadow var(--transition), border-color var(--transition);
             position: relative;
             overflow: hidden;
         }
 
-        .system-pill::after {
+        .transport-btn::before {
             content: '';
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: #0ff;
-            transform: scaleX(0);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            inset: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(77, 252, 255, 0.2), transparent 55%);
+            opacity: 0;
+            transition: opacity var(--transition);
         }
 
-        .system-pill:hover {
-            background: rgba(0, 255, 255, 0.2);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 255, 255, 0.3);
-        }
-
-        .system-pill:hover::after {
-            transform: scaleX(1);
-        }
-
-        .system-pill.active {
-            background: linear-gradient(135deg, #0ff, #0af);
-            color: #000;
-            font-weight: bold;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            border-color: #0ff;
-        }
-
-        #status-display {
-            font-size: 9px;
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(0, 255, 255, 0.05);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .status-line {
-            margin-bottom: 3px;
-            opacity: 0.8;
-        }
-
-        .status-line.success {
-            color: #0f0;
-        }
-
-        .status-line.error {
-            color: #f00;
-        }
-
-        .status-line.info {
-            color: #0ff;
-        }
-
-        #loading-indicator {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid #0ff;
-            padding: 30px;
-            z-index: 1000;
-            text-align: center;
-        }
-
-        #loading-indicator.hidden {
-            display: none;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(0, 255, 255, 0.3);
-            border-top-color: #0ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        #mode-display {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            border: none;
-            padding: 10px 15px;
-            z-index: 100;
-            min-width: 200px;
-            backdrop-filter: blur(10px) saturate(150%);
-            box-shadow: 0 4px 16px rgba(0, 255, 255, 0.1);
-            border-radius: 8px;
-            animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            /* MINIMAL STATUS OVERLAY */
-            opacity: 0.9;
-            transition: opacity 0.3s ease;
-        }
-
-        #mode-display:hover {
+        .transport-btn:hover::before {
             opacity: 1;
         }
 
-        #mode-display:not(:hover) {
-            opacity: 0.2;
+        .transport-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(120, 230, 255, 0.6);
+            box-shadow: 0 18px 32px rgba(77, 252, 255, 0.25);
         }
 
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        .transport-btn[data-state="active"] {
+            background: linear-gradient(145deg, rgba(77, 252, 255, 0.9), rgba(120, 230, 255, 0.75));
+            color: #01030f;
+            border-color: rgba(120, 230, 255, 0.9);
+            box-shadow: 0 18px 36px rgba(77, 252, 255, 0.4);
         }
 
-        #mode-display h3 {
-            font-size: 9px;
-            margin-bottom: 5px;
-            color: #0ff;
-            opacity: 0.7;
-        }
-
-        #mode-display .mode-value {
-            font-size: 11px;
-            color: #fff;
-            margin-bottom: 3px;
-        }
-
-        #mode-display .mode-details {
-            font-size: 8px;
-            opacity: 0.6;
-            line-height: 1.4;
-        }
-
-        #mode-display .mode-details div {
-            margin-bottom: 2px;
-        }
-
-        .build-info {
-            font-size: 8px;
-            opacity: 0.5;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(0, 255, 255, 0.2);
-        }
-
-        /* REDESIGNED VISUALS PANEL - NO OVERLAP */
-        #visuals-panel {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.92);
-            border: 1px solid rgba(255, 0, 255, 0.5);
-            padding: 12px;
-            z-index: 99;
-            width: 280px;
-            max-height: calc(100vh - 320px);
-            backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 4px 20px rgba(255, 0, 255, 0.12);
-            border-radius: 8px;
-            animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-            transition: all 0.3s ease;
-            resize: both;
-            overflow: auto;
-            min-width: 250px;
-            min-height: 150px;
-        }
-
-        #visuals-panel.collapsed {
-            width: 120px;
-            height: 40px;
-            min-width: 120px;
-            min-height: 40px;
-            left: 10px;
-            padding: 8px 12px;
-            overflow: visible;
-            resize: none;
-            cursor: pointer;
-            z-index: 149;
-            background: linear-gradient(90deg, rgba(255,0,255,0.3), rgba(200,0,255,0.5));
-            border-radius: 8px 8px 0 0;
-            border-top: 2px solid #f0f;
-            box-shadow: 0 -2px 8px rgba(255,0,255,0.3);
+        .audio-loader {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
+            gap: 12px;
         }
 
-        #visuals-panel.collapsed .panel-content {
-            display: none;
+        .audio-loader button {
+            background: linear-gradient(120deg, rgba(8, 18, 38, 0.92), rgba(18, 32, 58, 0.88));
+            border: 1px solid rgba(120, 230, 255, 0.32);
+            color: var(--text-primary);
+            padding: 12px 18px;
+            border-radius: 999px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-size: 11px;
+            cursor: pointer;
+            transition: var(--transition);
         }
 
-        #visuals-panel.collapsed .panel-collapse-btn {
-            position: static;
+        .audio-loader button:hover {
+            border-color: var(--glass-border-strong);
+            color: var(--neon-cyan);
+            box-shadow: 0 18px 32px rgba(77, 252, 255, 0.25);
+        }
+
+        .audio-status {
+            font-size: 11px;
+            color: var(--text-secondary);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .ai-mood-console {
+            background: linear-gradient(150deg, rgba(7, 14, 34, 0.92), rgba(16, 28, 58, 0.88));
+            border: 1px solid rgba(120, 230, 255, 0.22);
+            border-radius: 18px;
+            padding: 18px 20px;
+            box-shadow: inset 0 0 32px rgba(77, 252, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-mood-console::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 15%, rgba(77, 252, 255, 0.12), transparent 55%),
+                        radial-gradient(circle at 80% 85%, rgba(255, 120, 255, 0.1), transparent 60%);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .ai-mood-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-mood-label {
+            font-family: var(--font-heading);
+            font-size: clamp(16px, 2vw, 22px);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 22px rgba(77, 252, 255, 0.4);
+        }
+
+        .ai-mood-energy {
+            font-size: 11px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .ai-mood-description {
+            font-size: 0.88rem;
+            color: rgba(220, 240, 255, 0.72);
+            line-height: 1.5;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-mood-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-mood-keywords span {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(77, 252, 255, 0.12);
+            border: 1px solid rgba(120, 230, 255, 0.32);
+            color: rgba(210, 240, 255, 0.82);
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        .ai-mood-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mood-trigger {
+            background: linear-gradient(135deg, rgba(77, 252, 255, 0.2), rgba(255, 120, 255, 0.2));
+            border: 1px solid rgba(120, 230, 255, 0.45);
+            color: var(--text-primary);
+            padding: 12px 18px;
+            border-radius: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-size: 11px;
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+        }
+
+        .mood-trigger:hover {
+            transform: translateY(-2px);
+            border-color: rgba(120, 230, 255, 0.8);
+            box-shadow: 0 18px 36px rgba(77, 252, 255, 0.25);
+        }
+
+        .ai-mood-temperature {
+            font-size: 11px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .ai-mood-temperature[data-temperature="warm"] {
+            color: var(--neon-amber);
+            border-color: rgba(255, 206, 107, 0.4);
+        }
+
+        .ai-mood-temperature[data-temperature="cool"] {
+            color: var(--neon-cyan);
+            border-color: rgba(77, 252, 255, 0.4);
+        }
+
+        .ai-mood-temperature[data-temperature="electric"],
+        .ai-mood-temperature[data-temperature="neon"] {
+            color: var(--neon-magenta);
+            border-color: rgba(255, 114, 255, 0.4);
+        }
+
+        .ai-mood-temperature[data-temperature="sunrise"],
+        .ai-mood-temperature[data-temperature="volcanic"] {
+            color: var(--neon-amber);
+            border-color: rgba(255, 180, 120, 0.4);
+        }
+
+        .ai-mood-provenance {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 0.7rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgba(200, 230, 255, 0.55);
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-mood-provenance time {
+            color: var(--neon-magenta);
+        }
+
+        .ai-mood-provenance .mood-source {
+            color: rgba(210, 240, 255, 0.72);
+        }
+
+        .ai-mood-prompt {
+            font-size: 0.82rem;
+            color: rgba(220, 240, 255, 0.7);
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-mood-delta {
+            font-size: 0.72rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(190, 220, 255, 0.58);
+            position: relative;
+            z-index: 1;
+        }
+
+        .mood-quick-adjust {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .adjust-control {
+            background: rgba(6, 14, 28, 0.68);
+            border: 1px solid rgba(120, 230, 255, 0.16);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .adjust-control label {
+            font-size: 0.7rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgba(200, 230, 255, 0.64);
+        }
+
+        .adjust-control input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(77, 252, 255, 0.45), rgba(255, 120, 255, 0.35));
+        }
+
+        .adjust-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            border: none;
+            box-shadow: 0 0 14px rgba(77, 252, 255, 0.6);
+            cursor: pointer;
+        }
+
+        .adjust-control input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            border: none;
+            box-shadow: 0 0 14px rgba(77, 252, 255, 0.6);
+            cursor: pointer;
+        }
+
+        .adjust-control .adjust-readout {
+            font-size: 0.72rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(220, 240, 255, 0.72);
+        }
+
+        .mood-quick-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mood-quick-actions button {
+            background: rgba(6, 14, 30, 0.72);
+            border: 1px solid rgba(120, 230, 255, 0.22);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .mood-quick-actions button:hover {
+            border-color: var(--glass-border-strong);
+            color: var(--neon-cyan);
+            box-shadow: 0 14px 28px rgba(77, 252, 255, 0.22);
+        }
+
+        .studio-main {
+            display: grid;
+            grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) minmax(300px, 360px);
+            gap: var(--section-gap);
+            padding: clamp(22px, 2.4vw, 38px);
+            background: linear-gradient(160deg, rgba(6, 12, 30, 0.88), rgba(6, 12, 30, 0.68));
+        }
+
+        .studio-rail {
+            display: flex;
+            flex-direction: column;
+            gap: var(--panel-gap);
+        }
+
+        .story-card {
+            background: linear-gradient(150deg, rgba(8, 20, 40, 0.92), rgba(14, 26, 54, 0.85));
+            border-radius: var(--panel-radius);
+            border: 1px solid rgba(120, 230, 255, 0.18);
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .story-card h2 {
+            font-family: var(--font-heading);
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 0.28em;
+            color: var(--neon-cyan);
+        }
+
+        .scene-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .scene-chip {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: linear-gradient(120deg, rgba(14, 24, 48, 0.8), rgba(8, 18, 36, 0.7));
+            border: 1px solid rgba(120, 230, 255, 0.18);
+        }
+
+        .scene-chip strong {
+            font-family: var(--font-heading);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .scene-chip span {
+            font-size: 11px;
+            color: var(--text-secondary);
+            letter-spacing: 0.14em;
+        }
+
+        .scene-chip .scene-system {
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--neon-amber);
+        }
+
+        .macro-board {
+            display: grid;
+            gap: 10px;
+        }
+
+        .macro-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            color: var(--text-secondary);
+        }
+
+        .macro-row span:last-child {
+            color: var(--neon-magenta);
+            font-size: 11px;
+        }
+
+        .mood-journal-card {
+            background: linear-gradient(150deg, rgba(8, 18, 42, 0.92), rgba(10, 22, 48, 0.84));
+            border-radius: var(--panel-radius);
+            border: 1px solid rgba(120, 230, 255, 0.18);
+            padding: 20px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mood-journal-card h2 {
+            font-family: var(--font-heading);
+            text-transform: uppercase;
+            font-size: 15px;
+            letter-spacing: 0.26em;
+            color: var(--neon-cyan);
+        }
+
+        .mood-history-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mood-history-item {
+            background: rgba(6, 14, 28, 0.6);
+            border: 1px solid rgba(120, 230, 255, 0.16);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: grid;
+            gap: 6px;
+        }
+
+        .mood-history-item header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(200, 230, 255, 0.55);
+        }
+
+        .mood-history-item header time {
+            color: var(--neon-magenta);
+        }
+
+        .mood-history-label {
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+
+        .mood-history-prompt {
+            font-size: 0.74rem;
+            color: rgba(210, 230, 255, 0.68);
+            font-style: italic;
+        }
+
+        .mood-history-delta {
+            font-size: 0.68rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(190, 220, 255, 0.55);
+        }
+
+        .mood-history-item[data-entry-type="ai-profile"] {
+            border-color: rgba(77, 252, 255, 0.3);
+        }
+
+        .mood-history-item[data-entry-type="quick-adjust-reset"] {
+            border-color: rgba(255, 180, 120, 0.28);
+        }
+
+        .mood-history-item.is-active {
+            border-color: rgba(255, 255, 255, 0.45);
+            box-shadow: 0 0 18px rgba(120, 230, 255, 0.35);
+            background: rgba(12, 30, 48, 0.82);
+        }
+
+        .mood-storyboard-card,
+        .responsive-preset-card {
+            background: linear-gradient(150deg, rgba(6, 16, 32, 0.92), rgba(8, 18, 36, 0.86));
+            border-radius: var(--panel-radius);
+            border: 1px solid rgba(120, 200, 255, 0.16);
+            padding: 18px;
+            margin-top: 18px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(14px);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .mood-storyboard-card h2,
+        .responsive-preset-card h2 {
+            font-family: var(--font-heading);
+            text-transform: uppercase;
+            letter-spacing: 0.24em;
+            font-size: 14px;
+            color: rgba(140, 220, 255, 0.9);
+        }
+
+        .mood-storyboard-list,
+        .responsive-preset-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mood-storyboard-item {
+            border: 1px solid rgba(120, 200, 255, 0.14);
+            border-radius: 12px;
+            padding: 12px;
+            display: grid;
+            gap: 6px;
+            background: rgba(8, 20, 40, 0.55);
+        }
+
+        .mood-storyboard-item header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(200, 230, 255, 0.55);
+        }
+
+        .storyboard-label {
+            font-family: var(--font-heading);
+            letter-spacing: 0.2em;
+            color: var(--text-primary);
+        }
+
+        .storyboard-time {
+            color: var(--neon-cyan);
+        }
+
+        .storyboard-energy {
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(180, 220, 255, 0.7);
+        }
+
+        .storyboard-keywords {
+            font-size: 0.68rem;
+            color: rgba(210, 235, 255, 0.6);
+            letter-spacing: 0.1em;
+        }
+
+        .mood-storyboard-item.is-active {
+            border-color: rgba(150, 240, 255, 0.4);
+            box-shadow: 0 0 14px rgba(120, 230, 255, 0.3);
+        }
+
+        .responsive-preset-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .responsive-preset-actions button {
+            background: rgba(120, 230, 255, 0.12);
+            border: 1px solid rgba(120, 230, 255, 0.4);
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 0.68rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+        }
+
+        .responsive-preset-actions button:hover {
+            background: rgba(120, 230, 255, 0.2);
+        }
+
+        .responsive-preset-item {
+            border: 1px solid rgba(120, 200, 255, 0.14);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: rgba(8, 18, 36, 0.6);
+            display: grid;
+            grid-template-columns: auto auto;
+            grid-template-rows: auto auto;
+            column-gap: 10px;
+            row-gap: 4px;
+            cursor: pointer;
+        }
+
+        .responsive-preset-item .preset-label {
+            grid-column: 1 / span 2;
+            font-family: var(--font-heading);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+
+        .responsive-preset-item .preset-weights {
+            font-size: 0.64rem;
+            letter-spacing: 0.16em;
+            color: rgba(200, 230, 255, 0.55);
+        }
+
+        .responsive-preset-item time {
+            justify-self: end;
+            font-size: 0.62rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--neon-magenta);
+        }
+
+        .responsive-preset-item.is-active {
+            border-color: rgba(255, 255, 255, 0.42);
+            box-shadow: 0 0 16px rgba(120, 230, 255, 0.28);
+            background: rgba(10, 24, 44, 0.78);
+        }
+
+        #mood-history-empty {
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(200, 220, 255, 0.4);
+        }
+
+        .studio-stage {
+            position: relative;
+            border-radius: calc(var(--panel-radius) + 10px);
+            overflow: hidden;
+            box-shadow: 0 28px 100px rgba(3, 10, 26, 0.7);
+        }
+
+        .stage-frame {
+            position: relative;
+            border-radius: inherit;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 20%, rgba(40, 120, 255, 0.18), rgba(2, 4, 12, 0.95));
+            border: 1px solid rgba(120, 230, 255, 0.22);
+        }
+
+        #stage-container {
+            position: relative;
+            width: 100%;
+            min-height: clamp(480px, 55vw, 640px);
+            border-radius: inherit;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, rgba(18, 32, 60, 0.72), rgba(4, 8, 20, 0.92));
+        }
+
+        .stage-overlay {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            padding: 32px;
+        }
+
+        .sonic-hud {
+            width: clamp(280px, 32vw, 360px);
+            background: linear-gradient(145deg, rgba(6, 10, 24, 0.9), rgba(12, 18, 36, 0.78));
+            border-radius: var(--hud-radius);
+            border: 1px solid rgba(120, 230, 255, 0.35);
+            box-shadow: 0 22px 60px rgba(8, 18, 46, 0.65);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding: 22px;
+            backdrop-filter: blur(18px) saturate(160%);
+        }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .hud-title {
+            text-transform: uppercase;
+            letter-spacing: 0.35em;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .hud-mood-provenance {
+            background: rgba(6, 14, 28, 0.6);
+            border: 1px solid rgba(120, 230, 255, 0.18);
+            border-radius: 14px;
+            padding: 14px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .hud-mood-title {
+            font-family: var(--font-heading);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-size: 12px;
+            color: var(--neon-cyan);
+        }
+
+        .hud-mood-meta {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(200, 220, 255, 0.55);
+        }
+
+        .hud-mood-meta time {
+            color: var(--neon-magenta);
+        }
+
+        .hud-mood-meta [data-hud="mood-energy"] {
+            color: var(--neon-lime);
+        }
+
+        .hud-mood-prompt {
+            font-size: 0.72rem;
+            color: rgba(210, 230, 255, 0.68);
+            font-style: italic;
+        }
+
+        .hud-mood-delta {
+            font-size: 10px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: rgba(180, 220, 255, 0.55);
+        }
+
+        .hud-mode {
+            font-family: var(--font-heading);
+            font-size: 14px;
+            letter-spacing: 0.3em;
+            color: var(--neon-lime);
+        }
+
+        .hud-spectrum {
+            display: grid;
+            gap: 12px;
+        }
+
+        .hud-spectrum .channel-label {
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .hud-spectrum .bar {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(77, 252, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .hud-spectrum .bar span {
+            display: block;
             width: 100%;
             height: 100%;
-            border-radius: 8px 8px 0 0;
-            font-size: 24px;
+            background: linear-gradient(90deg, rgba(77, 252, 255, 0.2), rgba(77, 252, 255, 0.95));
+            transform: scaleX(0.2);
+            transform-origin: left;
+            transition: transform 180ms ease;
         }
 
-        #visuals-panel::-webkit-resizer {
-            background: linear-gradient(135deg, transparent 50%, rgba(255, 0, 255, 0.5) 50%);
-            border-bottom-right-radius: 12px;
+        .hud-pad-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
         }
 
-        #visuals-panel h2 {
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: #f0f;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 0, 255, 0.4);
-            padding-bottom: 10px;
-            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        .pad-card {
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(120, 230, 255, 0.25);
+            background: rgba(10, 18, 34, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
         }
 
-        /* Collapsible Sections */
-        .collapsible-section {
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            border-radius: 4px;
-            margin-bottom: 10px;
+        .pad-position {
+            font-family: var(--font-heading);
+            font-size: 13px;
+            color: var(--neon-cyan);
+        }
+
+        .hold-indicator {
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            color: var(--text-secondary);
+            transition: color 160ms ease, text-shadow 160ms ease;
+        }
+
+        .hold-indicator.is-active {
+            color: var(--neon-magenta);
+            text-shadow: 0 0 20px rgba(255, 114, 255, 0.6);
+        }
+
+        .hud-assignment {
+            display: grid;
+            gap: 8px;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .hud-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .hud-footer strong {
+            color: var(--neon-amber);
+            font-size: 12px;
+        }
+
+        #studio-utility-rail {
+            position: relative;
+        }
+
+        .studio-panel {
+            background: linear-gradient(160deg, rgba(8, 16, 32, 0.92), rgba(12, 18, 38, 0.88));
+            border-radius: var(--panel-radius);
+            border: 1px solid rgba(120, 230, 255, 0.18);
+            min-height: 280px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(18px);
             overflow: hidden;
-            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .studio-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 15% 0%, rgba(77, 252, 255, 0.16), transparent 60%);
+            pointer-events: none;
+        }
+
+        .panel-content {
+            padding: 18px 24px 28px;
+            max-height: 62vh;
+            overflow-y: auto;
+        }
+
+        .panel-collapse-btn {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: rgba(6, 12, 24, 0.85);
+            border: 1px solid rgba(120, 230, 255, 0.28);
+            color: var(--text-secondary);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition);
+        }
+
+        .panel-collapse-btn:hover {
+            color: var(--neon-cyan);
+            border-color: rgba(120, 230, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .panel-tab-label {
+            padding: 28px 24px 18px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.38em;
+            color: var(--text-muted);
+        }
+
+        .collapsible-section {
+            border-radius: 16px;
+            border: 1px solid rgba(120, 230, 255, 0.18);
+            margin-bottom: 16px;
+            overflow: hidden;
+            background: rgba(10, 18, 38, 0.72);
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 12px;
-            background: rgba(0, 255, 255, 0.05);
+            padding: 16px 18px;
             cursor: pointer;
-            user-select: none;
-            transition: background 0.2s;
+            font-size: 12px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            background: linear-gradient(135deg, rgba(6, 12, 24, 0.9), rgba(12, 20, 40, 0.86));
         }
 
         .section-header:hover {
-            background: rgba(0, 255, 255, 0.1);
-        }
-
-        .section-title {
-            font-size: 11px;
-            font-weight: bold;
-            color: #0ff;
-        }
-
-        .section-arrow {
-            font-size: 10px;
-            color: #0ff;
-            opacity: 0.7;
+            color: var(--neon-cyan);
+            background: linear-gradient(135deg, rgba(6, 12, 24, 0.96), rgba(18, 28, 52, 0.92));
         }
 
         .section-content {
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+            background: rgba(6, 12, 24, 0.8);
         }
 
         .slider-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 72px;
+            gap: 12px;
             align-items: center;
-            gap: 10px;
         }
 
         .slider-row input[type="range"] {
-            flex: 1;
+            width: 100%;
         }
 
         .slider-row span {
-            min-width: 40px;
-            text-align: right;
-            font-size: 10px;
+            font-size: 12px;
+            letter-spacing: 0.12em;
         }
 
-        .system-pill.active {
-            background: #0ff !important;
-            color: #000 !important;
-            font-weight: bold;
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(77, 252, 255, 0.12);
+            outline: none;
         }
 
-        /* XY Touchpad */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(77, 252, 255, 0.6);
+            cursor: pointer;
+        }
+
         .xy-touchpad {
             position: relative;
             width: 100%;
-            height: 240px;
-            background: rgba(0, 255, 255, 0.05);
-            border: 2px solid #0ff;
-            border-radius: 8px;
-            margin: 15px 0;
+            height: 260px;
+            border-radius: 22px;
+            border: 1px solid rgba(120, 230, 255, 0.24);
+            background: radial-gradient(circle at 30% 30%, rgba(77, 252, 255, 0.12), transparent 60%),
+                        linear-gradient(140deg, rgba(6, 12, 26, 0.9), rgba(12, 20, 40, 0.82));
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(120, 230, 255, 0.12);
             cursor: crosshair;
-            overflow: visible;
-            transition: all 0.3s ease;
         }
 
-        .xy-touchpad:hover {
-            background: rgba(0, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        .xy-touchpad::after {
+            content: '';
+            position: absolute;
+            inset: 10%;
+            border: 1px dashed rgba(120, 230, 255, 0.2);
+            border-radius: 18px;
         }
 
         .touchpad-controls {
             position: absolute;
-            top: -35px;
-            left: 0;
-            right: 0;
+            top: 14px;
+            left: 14px;
+            right: 14px;
             display: flex;
-            gap: 10px;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #0ff;
-            border-radius: 4px;
-            z-index: 10;
+            gap: 12px;
+            background: rgba(6, 12, 24, 0.88);
+            border-radius: 16px;
+            border: 1px solid rgba(120, 230, 255, 0.24);
+            padding: 10px 12px;
+            backdrop-filter: blur(10px);
+            z-index: 3;
         }
 
         .touchpad-dropdown-wrapper {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             flex: 1;
-        }
-
-        .touchpad-dropdown-wrapper label {
+            letter-spacing: 0.12em;
             font-size: 10px;
-            color: #0ff;
-            min-width: 15px;
+            text-transform: uppercase;
         }
 
         .touchpad-dropdown {
             flex: 1;
-            padding: 4px;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid #0ff;
-            color: #0ff;
-            font-family: inherit;
-            font-size: 10px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .touchpad-dropdown:hover {
-            background: rgba(0, 255, 255, 0.2);
-        }
-
-        .touchpad-dropdown option {
-            background: #000;
-            color: #0ff;
-        }
-
-        .touchpad-label-x {
-            position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 9px;
-            color: #0ff;
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .touchpad-label-y {
-            position: absolute;
-            top: 50%;
-            left: 5px;
-            transform: translateY(-50%) rotate(-90deg);
-            font-size: 9px;
-            color: #0ff;
-            opacity: 0.6;
-            pointer-events: none;
+            background: rgba(6, 12, 24, 0.92);
+            border: 1px solid rgba(120, 230, 255, 0.24);
+            color: var(--text-primary);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 11px;
         }
 
         .touchpad-cursor {
             position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #0ff;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            box-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 18px rgba(77, 252, 255, 0.7);
             transform: translate(-50%, -50%);
             pointer-events: none;
-            transition: all 0.1s ease;
         }
 
         .touchpad-hint {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 18px;
+            left: 18px;
+            right: 18px;
             font-size: 10px;
-            color: #0ff;
-            opacity: 0.3;
-            pointer-events: none;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--text-muted);
             text-align: center;
         }
 
-        .xy-touchpad.geometry-cycle-flash {
-            background: rgba(0, 255, 255, 0.4) !important;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+        #performance-deck {
+            background: linear-gradient(180deg, rgba(6, 12, 24, 0.9), rgba(2, 4, 12, 0.96));
+            padding: clamp(20px, 2.6vw, 36px) clamp(26px, 3vw, 44px) clamp(32px, 3vw, 48px);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(22px, 2.2vw, 32px);
         }
 
-        /* Smart Morphing Audio Button */
-        .smart-audio-btn {
-            min-width: 140px;
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: bold;
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 200, 255, 0.3));
-            border: 2px solid #0ff;
-            color: #0ff;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .deck-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: var(--panel-gap);
+        }
+
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--panel-gap);
+        }
+
+        .deck-card {
+            background: linear-gradient(150deg, rgba(8, 18, 36, 0.92), rgba(10, 20, 40, 0.86));
+            border-radius: var(--panel-radius);
+            border: 1px solid rgba(120, 230, 255, 0.22);
+            padding: 22px 24px 26px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .deck-card header {
+            font-size: 12px;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .timeline-wrapper {
+            display: grid;
+            gap: 12px;
+        }
+
+        .timeline-bar {
             position: relative;
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(77, 252, 255, 0.1);
             overflow: hidden;
         }
 
-        .smart-audio-btn:hover {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(0, 200, 255, 0.4));
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-            transform: scale(1.05);
-        }
-
-        .smart-audio-btn:active {
-            transform: scale(0.98);
-        }
-
-        .smart-audio-btn[data-state="load"] {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 200, 255, 0.3));
-        }
-
-        .smart-audio-btn[data-state="play"] {
-            background: linear-gradient(135deg, rgba(0, 255, 100, 0.2), rgba(0, 200, 100, 0.3));
-            border-color: #0f0;
-            color: #0f0;
-        }
-
-        .smart-audio-btn[data-state="pause"] {
-            background: linear-gradient(135deg, rgba(255, 200, 0, 0.2), rgba(255, 150, 0, 0.3));
-            border-color: #fa0;
-            color: #fa0;
-        }
-
-        .smart-audio-btn[data-state="playing"] {
-            background: linear-gradient(135deg, rgba(0, 255, 100, 0.3), rgba(0, 200, 100, 0.4));
-            border-color: #0f0;
-            color: #0f0;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 100, 0.3); }
-            50% { box-shadow: 0 0 20px rgba(0, 255, 100, 0.6); }
-        }
-
-        /* Prominent Visualizer Tabs */
-        .visualizer-tabs {
-            display: flex;
-            gap: 5px;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 6px;
-        }
-
-        .viz-tab {
-            padding: 10px 20px;
-            background: rgba(0, 255, 255, 0.1);
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            color: #0ff;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 4px;
-            min-width: 100px;
-        }
-
-        .viz-tab:hover {
-            background: rgba(0, 255, 255, 0.2);
-            border-color: rgba(0, 255, 255, 0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.3);
-        }
-
-        .viz-tab.active {
-            background: linear-gradient(135deg, #0ff, #0af);
-            color: #000;
-            border-color: #0ff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.2);
-        }
-
-        .viz-tab:active {
-            transform: translateY(0);
-        }
-
-        /* Panel Collapse Buttons - ALWAYS VISIBLE */
-        .panel-collapse-btn {
+        .timeline-bar span {
             position: absolute;
-            top: 6px;
-            right: 6px;
-            width: 24px;
-            height: 24px;
-            background: rgba(0, 255, 255, 0.4);
-            border: 1px solid rgba(0, 255, 255, 0.8);
-            border-radius: 4px;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(255, 114, 255, 0.18), rgba(77, 252, 255, 0.95));
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform 160ms ease;
+        }
+
+        .timecode {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            font-family: var(--font-heading);
+            letter-spacing: 0.28em;
             font-size: 14px;
-            font-weight: bold;
-            color: #0ff;
-            transition: all 0.2s;
-            z-index: 201;
-            box-shadow: 0 1px 4px rgba(0,255,255,0.4);
         }
 
-        .panel-collapse-btn:hover {
-            background: rgba(0, 255, 255, 0.4);
-            transform: scale(1.1);
+        .trajectory-map {
+            position: relative;
+            height: 180px;
+            border-radius: 18px;
+            border: 1px solid rgba(120, 230, 255, 0.18);
+            background: linear-gradient(140deg, rgba(8, 18, 36, 0.82), rgba(6, 12, 24, 0.92));
+            overflow: hidden;
         }
 
-        #visuals-panel .panel-collapse-btn {
-            background: rgba(255, 0, 255, 0.4);
-            border-color: rgba(255, 0, 255, 0.8);
-            color: #f0f;
+        .trajectory-map::after {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            border: 1px dashed rgba(120, 230, 255, 0.18);
+            border-radius: 14px;
         }
 
-        #visuals-panel .panel-collapse-btn:hover {
-            background: rgba(255, 0, 255, 0.5);
+        .trajectory-cursor {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--neon-magenta);
+            box-shadow: 0 0 22px rgba(255, 114, 255, 0.6);
+            transform: translate(-50%, -50%);
+            transition: transform 120ms ease;
         }
 
-        #control-panel.collapsed .panel-collapse-btn {
-            position: static;
-            width: 100%;
-            height: 100%;
-            border-radius: 8px 0 0 8px;
-            font-size: 20px;
+        .trajectory-cursor[data-surface="canvas"] {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 22px rgba(77, 252, 255, 0.55);
         }
 
-        #visuals-panel.collapsed .panel-collapse-btn {
-            position: static;
-            width: 100%;
-            height: 100%;
-            border-radius: 8px 8px 0 0;
-            font-size: 16px;
+        .surface-readouts {
+            display: grid;
+            gap: 10px;
         }
 
-        /* Tab labels - only show when collapsed */
-        .panel-tab-label {
-            display: none;
+        .surface-readout {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 12px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
         }
 
-        .collapsed .panel-tab-label {
-            display: block;
+        .surface-readout strong {
             font-size: 14px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-shadow: 0 0 8px currentColor;
+            color: var(--neon-cyan);
         }
 
-        /* Mobile Responsive - Portrait Mode */
-        @media (max-width: 768px) {
-            #control-panel {
-                top: 50px;
-                right: 8px;
-                width: calc(100vw - 60px);
-                max-width: 280px;
-                max-height: calc(50vh - 50px);
-            }
+        #mode-display {
+            background: transparent;
+            border: none;
+            padding: 0;
+            gap: 18px;
+        }
 
-            #visuals-panel {
-                bottom: 8px;
-                left: 8px;
-                width: calc(100vw - 60px);
-                max-width: 280px;
-                max-height: calc(40vh - 50px);
-            }
+        #mode-display header {
+            color: var(--neon-amber);
+        }
 
-            #control-panel.collapsed {
-                width: 40px;
-                height: 120px;
-                right: 0;
-            }
+        #mode-display .status-grid {
+            display: grid;
+            gap: 14px;
+        }
 
-            #visuals-panel.collapsed {
-                width: 100px;
-                height: 35px;
-                bottom: 0;
-            }
+        #mode-display .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
 
-            #top-bar {
-                height: 42px;
-                padding: 5px 8px;
-                gap: 6px;
-            }
+        #mode-display .status-row span:last-child {
+            font-family: var(--font-heading);
+            color: var(--text-primary);
+        }
 
-            #top-bar button {
-                padding: 6px 10px;
-                font-size: 9px;
+        .loading-indicator {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: rgba(2, 4, 12, 0.92);
+            z-index: 1000;
+            backdrop-filter: blur(18px);
+        }
+
+        .loading-indicator.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 240ms ease;
+        }
+
+        .loading-card {
+            background: linear-gradient(150deg, rgba(8, 18, 36, 0.95), rgba(6, 12, 26, 0.92));
+            border-radius: 22px;
+            border: 1px solid rgba(120, 230, 255, 0.35);
+            padding: 32px 44px;
+            text-align: center;
+            box-shadow: 0 28px 60px rgba(3, 10, 26, 0.65);
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid rgba(120, 230, 255, 0.2);
+            border-top-color: rgba(120, 230, 255, 0.8);
+            margin: 0 auto 18px;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-card h3 {
+            font-size: 14px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+        }
+
+        .loading-card p {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            letter-spacing: 0.16em;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
         }
 
-        @media (max-width: 480px) and (orientation: portrait) {
-            /* Top bar mobile optimization - COMPACT */
-            #top-bar {
-                height: 38px;
-                min-height: 38px;
-                padding: 4px 6px;
-                gap: 4px;
-            }
+        /* Layout states */
+        body[data-layout="wide"] .studio-top-bar {
+            grid-template-columns: minmax(200px, 240px) minmax(200px, 240px) minmax(240px, 1fr) minmax(220px, 280px) minmax(220px, 280px);
+        }
 
-            #top-bar button {
-                padding: 6px 8px;
-                font-size: 9px;
-                min-height: 30px;
-                height: 30px;
-            }
+        body[data-layout="wide"] .studio-main {
+            grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(280px, 320px);
+        }
 
-            #top-bar .logo {
-                font-size: 10px;
-            }
+        body[data-layout="compact"] .studio-top-bar {
+            grid-template-columns: minmax(200px, 1fr) minmax(220px, 1fr);
+            grid-template-rows: auto auto;
+        }
 
-            /* Control panel - MOBILE OPTIMIZED */
-            #control-panel {
-                top: 42px;
-                right: 0;
-                width: calc(100vw - 50px);
-                max-width: 100%;
-                max-height: calc(55vh - 42px);
-            }
+        body[data-layout="compact"] .ai-mood-console,
+        body[data-layout="compact"] .transport-cluster {
+            grid-column: 1 / -1;
+        }
 
-            #control-panel.collapsed {
-                width: 35px;
-                height: 100px;
-                min-width: 35px;
-                min-height: 100px;
-                right: 0;
-            }
+        body[data-layout="compact"] .brand-block {
+            grid-column: 1 / -1;
+        }
 
-            /* Visuals panel - MOBILE OPTIMIZED */
-            #visuals-panel {
-                bottom: 0;
-                left: 0;
-                width: calc(100vw - 50px);
-                max-width: 100%;
-                max-height: calc(35vh - 10px);
-            }
+        body[data-layout="compact"] .system-switch {
+            justify-content: flex-start;
+        }
 
-            #visuals-panel.collapsed {
-                width: 90px;
-                height: 32px;
-                min-width: 90px;
-                min-height: 32px;
-                bottom: 0;
-                left: 0;
-            }
+        body[data-layout="compact"] .mood-quick-adjust {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
 
-            /* Touch-friendly controls */
-            button {
-                min-height: 40px;
-                font-size: 10px;
-            }
+        body[data-layout="compact"] .mood-quick-actions {
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
 
-            input[type="range"] {
-                height: 30px;
-            }
+        body[data-layout="compact"] .studio-main {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
 
-            .section-header {
-                padding: 10px;
-                min-height: 40px;
-            }
+        body[data-layout="compact"] #studio-utility-rail {
+            grid-column: 1 / -1;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: var(--panel-gap);
+        }
 
-            .panel-collapse-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 16px;
-            }
+        body[data-layout="compact"] .studio-panel {
+            flex: 1 1 320px;
+        }
+
+        body[data-layout="stacked"] {
+            padding: clamp(12px, 4vw, 24px);
+        }
+
+        body[data-layout="stacked"] #studio-shell {
+            border-radius: clamp(18px, 4vw, 28px);
+        }
+
+        body[data-layout="stacked"] .studio-top-bar {
+            grid-template-columns: 1fr;
+            grid-template-rows: repeat(4, auto);
+        }
+
+        body[data-layout="stacked"] .studio-main {
+            grid-template-columns: 1fr;
+        }
+
+        body[data-layout="stacked"] .mood-quick-adjust,
+        body[data-orientation="portrait"] .mood-quick-adjust {
+            grid-template-columns: 1fr;
+        }
+
+        body[data-layout="stacked"] #studio-utility-rail,
+        body[data-layout="stacked"] .studio-rail {
+            flex-direction: column;
+        }
+
+        body[data-layout="stacked"] .studio-panel {
+            flex: 1 1 auto;
+        }
+
+        body[data-layout="stacked"] .deck-grid {
+            grid-template-columns: 1fr;
+        }
+
+        /* Orientation adjustments */
+        body[data-orientation="portrait"] .studio-top-bar {
+            grid-template-columns: 1fr;
+        }
+
+        body[data-orientation="portrait"] .studio-main {
+            grid-template-columns: 1fr;
         }
     </style>
 </head>
-<body>
-    <div id="loading-indicator">
-        <div class="spinner"></div>
-        <div>INITIALIZING VIB34D CHOREOGRAPHER...</div>
-        <div style="font-size: 10px; margin-top: 10px; opacity: 0.7;">Modular Build v2.0</div>
-    </div>
-
-    <!-- Top Bar with Smart Audio Button & Visualizer Tabs -->
-    <div id="top-bar">
-        <div class="logo">🎬 VIB34D</div>
-        <div class="divider"></div>
-
-        <!-- Smart Morphing Audio Button -->
-        <div class="control-section">
-            <button id="smart-audio-btn" class="smart-audio-btn" data-state="load">
-                📁 LOAD AUDIO
-            </button>
-            <input type="file" id="audio-file-input-top" accept="audio/*" style="display: none;">
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Prominent Visualizer System Tabs -->
-        <div class="visualizer-tabs">
-            <button class="viz-tab active" data-system="faceted">FACETED</button>
-            <button class="viz-tab" data-system="quantum">QUANTUM</button>
-            <button class="viz-tab" data-system="holographic">HOLOGRAPHIC</button>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="control-section" style="flex: 1; justify-content: flex-end;">
-            <div class="status-text" id="audio-status-top">Ready</div>
-        </div>
-    </div>
-
-    <div id="stage-container">
-        <!-- Canvas container - dynamically created per system -->
-    </div>
-
-    <div id="mode-display">
-        <h3>🎭 CHOREOGRAPHY STATUS</h3>
-        <div class="mode-value" id="current-mode">IDLE</div>
-        <div class="mode-details">
-            <div>System: <span id="current-system">-</span></div>
-            <div>Audio: <span id="audio-status">No file loaded</span></div>
-            <div>Sequences: <span id="sequence-count">0</span></div>
-        </div>
-    </div>
-
-    <div id="visuals-panel">
-        <!-- Visuals Menu - Dynamically populated by VisualsMenu.js -->
-    </div>
-
-    <div id="control-panel">
-        <h2>🎬 ADVANCED CONTROLS</h2>
-
-        <div class="control-group">
-            <label>🌐 VISUALIZATION SYSTEM</label>
-            <div class="system-pills">
-                <div class="system-pill active" data-system="faceted">FACETED</div>
-                <div class="system-pill" data-system="quantum">QUANTUM</div>
-                <div class="system-pill" data-system="holographic">HOLO</div>
+<body data-layout="panorama" data-orientation="landscape">
+    <div id="studio-shell">
+        <header id="top-bar" class="studio-top-bar">
+            <div class="brand-block">
+                <span class="brand-name">VIB34D</span>
+                <span class="brand-subtitle">Sonic Atlas Control Surface</span>
+                <span class="audio-status" id="audio-status">No audio loaded</span>
             </div>
-            <div style="font-size: 8px; opacity: 0.6; margin-top: 5px;">
-                ✅ Real WebGL engines active - 4D polytope rendering
+            <div class="top-metrics">
+                <div class="metric-chip">
+                    <span class="metric-label">Energy Sculpt</span>
+                    <span class="metric-value" data-metric-value="energy">0%</span>
+                    <div class="metric-bar"><span data-metric-bar="energy"></span></div>
+                </div>
+                <div class="metric-chip">
+                    <span class="metric-label">Intensity Blend</span>
+                    <span class="metric-value" data-metric-value="intensity">0%</span>
+                    <div class="metric-bar"><span data-metric-bar="intensity"></span></div>
+                </div>
             </div>
-        </div>
-
-        <div class="control-group">
-            <label>🤖 AI CHOREOGRAPHY</label>
-            <input type="password" id="gemini-api-key" placeholder="Gemini API Key..."
-                   style="width: 100%; padding: 5px; margin-bottom: 5px; background: rgba(0,255,255,0.1); border: 1px solid #0ff; color: #0ff; font-size: 10px;">
-            <button id="analyze-btn" disabled>🎵 ANALYZE SONG</button>
-        </div>
-
-        <div class="control-group">
-            <label>🎥 VIDEO EXPORT</label>
-            <button id="export-video-btn" disabled>💾 EXPORT VIDEO</button>
-            <button id="manual-record-btn" disabled>⏺ MANUAL RECORD</button>
-        </div>
-
-        <div class="control-group">
-            <label>📊 STATUS LOG</label>
-            <div id="status-display">
-                <div class="status-line info">Choreographer initialized</div>
-                <div class="status-line info">Waiting for audio file...</div>
+            <div class="ai-mood-console" aria-live="polite">
+                <div class="ai-mood-header">
+                    <span class="ai-mood-label" id="sonic-mood-label">Manual Sculpt</span>
+                    <span class="ai-mood-energy" id="sonic-mood-energy">50% ENERGY</span>
+                </div>
+                <p class="ai-mood-description" id="sonic-mood-description">
+                    Describe a feeling to sculpt the stage with holographic motion.
+                </p>
+                <div class="ai-mood-keywords" id="sonic-mood-keywords">
+                    <span>adaptive</span>
+                    <span>audio-linked</span>
+                </div>
+                <div class="ai-mood-provenance">
+                    <span class="mood-source" id="sonic-mood-source">manual</span>
+                    <time id="sonic-mood-timestamp" datetime="">--:--</time>
+                </div>
+                <div class="ai-mood-prompt" id="sonic-mood-prompt">Promptless mood</div>
+                <div class="ai-mood-delta" id="sonic-mood-deltas">Δ subtle</div>
+                <div class="mood-quick-adjust">
+                    <div class="adjust-control">
+                        <label for="mood-adjust-energy">Energy</label>
+                        <input type="range" id="mood-adjust-energy" min="-100" max="100" value="0" step="1" data-adjust="energy">
+                        <span class="adjust-readout" data-adjust-readout="energy">0%</span>
+                    </div>
+                    <div class="adjust-control">
+                        <label for="mood-adjust-texture">Texture</label>
+                        <input type="range" id="mood-adjust-texture" min="-100" max="100" value="0" step="1" data-adjust="texture">
+                        <span class="adjust-readout" data-adjust-readout="texture">0%</span>
+                    </div>
+                    <div class="adjust-control">
+                        <label for="mood-adjust-color">Color Drift</label>
+                        <input type="range" id="mood-adjust-color" min="-100" max="100" value="0" step="1" data-adjust="color">
+                        <span class="adjust-readout" data-adjust-readout="color">0%</span>
+                    </div>
+                </div>
+                <div class="mood-quick-actions">
+                    <button data-action="reset-mood-adjust">Reset Mood</button>
+                    <button data-action="export-mood-log">Export Mood Journal</button>
+                </div>
+                <div class="ai-mood-footer">
+                    <button class="mood-trigger" data-action="launch-ai-mood">Design Sonic Mood</button>
+                    <span class="ai-mood-temperature" id="sonic-mood-temperature" data-temperature="ambient">AMBIENT</span>
+                </div>
             </div>
+            <div class="system-switch" aria-label="Visualizer Systems">
+                <button class="system-pill active" data-system="faceted">Faceted Core</button>
+                <button class="system-pill" data-system="quantum">Quantum Bloom</button>
+                <button class="system-pill" data-system="holographic">Holographic Flux</button>
+            </div>
+            <div class="transport-cluster">
+                <button class="transport-btn" data-transport="play">Play</button>
+                <button class="transport-btn" data-transport="pause">Pause</button>
+                <button class="transport-btn" data-transport="stop">Stop</button>
+                <div class="audio-loader">
+                    <button data-action="load-audio">Load Audio</button>
+                    <input type="file" id="audio-file-input" accept="audio/*" hidden>
+                </div>
+            </div>
+        </header>
+
+        <div class="studio-main">
+            <aside class="studio-rail">
+                <div class="story-card">
+                    <h2>Setlist Flow</h2>
+                    <div class="scene-grid">
+                        <div class="scene-chip">
+                            <div>
+                                <strong>Ignition Pulse</strong>
+                                <span>Intro lift-off</span>
+                            </div>
+                            <span class="scene-system">FACETED</span>
+                        </div>
+                        <div class="scene-chip">
+                            <div>
+                                <strong>Quantum Bloom</strong>
+                                <span>Expansive chorus</span>
+                            </div>
+                            <span class="scene-system">QUANTUM</span>
+                        </div>
+                        <div class="scene-chip">
+                            <div>
+                                <strong>Holo Echo</strong>
+                                <span>Ambient bridge</span>
+                            </div>
+                            <span class="scene-system">HOLOGRAPHIC</span>
+                        </div>
+                    </div>
+                    <div class="macro-board">
+                        <div class="macro-row"><span>Scene Morph</span><span>Audio locked</span></div>
+                        <div class="macro-row"><span>Color Orbit</span><span>Synced</span></div>
+                        <div class="macro-row"><span>Rotation Bank</span><span>Adaptive</span></div>
+                    </div>
+                </div>
+                <div class="mood-journal-card">
+                    <h2>Sonic Mood Journal</h2>
+                    <p id="mood-history-empty">No sonic moods captured yet</p>
+                    <ul class="mood-history-list" id="mood-history-list"></ul>
+                </div>
+                <div class="mood-storyboard-card">
+                    <h2>Mood Storyboard</h2>
+                    <p id="mood-storyboard-empty">No timeline moods yet</p>
+                    <ul class="mood-storyboard-list" id="mood-storyboard-list"></ul>
+                </div>
+                <div class="responsive-preset-card">
+                    <h2>Responsive Presets</h2>
+                    <div class="responsive-preset-actions">
+                        <button data-action="train-responsive-preset">Train Current Blend</button>
+                    </div>
+                    <p id="responsive-preset-empty">Train a preset to blend moods with gestures</p>
+                    <ul class="responsive-preset-list" id="responsive-preset-list"></ul>
+                </div>
+            </aside>
+
+            <main class="studio-stage">
+                <div class="stage-frame">
+                    <div id="stage-container"></div>
+                    <div id="holographic-overlay" class="stage-overlay">
+                        <div class="sonic-hud" id="sonic-hud">
+                            <div class="hud-header">
+                                <span class="hud-title">Sonic Sculptor</span>
+                                <span class="hud-mode" data-hud="mode">INIT</span>
+                            </div>
+                            <div class="hud-mood-provenance">
+                                <div class="hud-mood-title" data-hud="mood-label">Manual Sculpt</div>
+                                <div class="hud-mood-meta">
+                                    <span data-hud="source">manual</span>
+                                    <time data-hud="timestamp" datetime="">--:--</time>
+                                    <span data-hud="mood-energy">50%</span>
+                                </div>
+                                <div class="hud-mood-prompt" data-hud="prompt">Promptless mood</div>
+                                <div class="hud-mood-delta" data-hud="delta">Δ subtle</div>
+                            </div>
+                            <div class="hud-spectrum">
+                                <div>
+                                    <div class="channel-label">Bass</div>
+                                    <div class="bar" data-channel="bass"><span></span></div>
+                                </div>
+                                <div>
+                                    <div class="channel-label">Mid</div>
+                                    <div class="bar" data-channel="mid"><span></span></div>
+                                </div>
+                                <div>
+                                    <div class="channel-label">High</div>
+                                    <div class="bar" data-channel="high"><span></span></div>
+                                </div>
+                                <div>
+                                    <div class="channel-label">Energy</div>
+                                    <div class="bar" data-channel="energy"><span></span></div>
+                                </div>
+                            </div>
+                            <div class="hud-pad-grid">
+                                <div class="pad-card">
+                                    <div>
+                                        <div>Controller Pad</div>
+                                        <div class="pad-position" data-pad="controller">50%, 50%</div>
+                                    </div>
+                                    <div class="hold-indicator" data-hold="controller">LIVE</div>
+                                </div>
+                                <div class="pad-card">
+                                    <div>
+                                        <div>Canvas Pad</div>
+                                        <div class="pad-position" data-pad="canvas">50%, 50%</div>
+                                    </div>
+                                    <div class="hold-indicator" data-hold="canvas">LIVE</div>
+                                </div>
+                            </div>
+                            <div class="hud-assignment">
+                                <div>Controller X → <span data-assignment="controller-x">chaos</span></div>
+                                <div>Controller Y → <span data-assignment="controller-y">speed</span></div>
+                                <div>Canvas X → <span data-assignment="canvas-x">rot4dYW, glitchIntensity</span></div>
+                                <div>Canvas Y → <span data-assignment="canvas-y">rot4dXW, intensity</span></div>
+                            </div>
+                            <div class="hud-footer">
+                                <span>Intensity <strong data-hud="intensity">50%</strong></span>
+                                <span>Audio Reactivity</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="studio-rail" id="studio-utility-rail">
+                <div id="control-panel" class="studio-panel"></div>
+                <div id="visuals-panel" class="studio-panel"></div>
+            </aside>
         </div>
 
-        <div class="build-info">
-            VIB34D Modular Build v2.0<br>
-            Phase 1: Core Extraction Complete<br>
-            Vite Dev Server Active
+        <section id="performance-deck">
+            <div class="deck-panels" id="deck-panel-dock"></div>
+            <div class="deck-grid">
+                <article class="deck-card">
+                    <header>Transport &amp; Macro Sculpt</header>
+                    <div class="timeline-wrapper">
+                        <div class="timeline-bar"><span data-progress></span></div>
+                        <div class="timecode" data-timecode>
+                            <span data-time="current">00:00</span>
+                            <span data-time="duration">--:--</span>
+                        </div>
+                        <div class="surface-readouts">
+                            <div class="surface-readout">
+                                <span>System</span>
+                                <strong id="current-system">FACETED</strong>
+                            </div>
+                            <div class="surface-readout">
+                                <span>Mode</span>
+                                <strong id="current-mode">IDLE</strong>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="deck-card">
+                    <header>Expressive Trajectories</header>
+                    <div class="trajectory-map" aria-hidden="true">
+                        <div class="trajectory-cursor" data-surface="controller"></div>
+                        <div class="trajectory-cursor" data-surface="canvas"></div>
+                    </div>
+                    <div class="surface-readouts">
+                        <div class="surface-readout">
+                            <span>Controller XY</span>
+                            <strong data-pad-readout="controller">50 · 50</strong>
+                        </div>
+                        <div class="surface-readout">
+                            <span>Canvas XY</span>
+                            <strong data-pad-readout="canvas">50 · 50</strong>
+                        </div>
+                    </div>
+                    <div id="controller-pad-zone"></div>
+                </article>
+
+                <article class="deck-card" id="mode-display">
+                    <header>Choreography Status</header>
+                    <div class="status-grid">
+                        <div class="status-row">
+                            <span>Audio</span>
+                            <span id="audio-status-bottom">Disconnected</span>
+                        </div>
+                        <div class="status-row">
+                            <span>Sequences</span>
+                            <span id="sequence-count">0</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <div id="loading-indicator" class="loading-indicator">
+        <div class="loading-card">
+            <div class="spinner"></div>
+            <h3>Booting Sonic Atlas</h3>
+            <p>Initializing choreography engines...</p>
         </div>
     </div>
 
-    <script type="module">
-        import { Choreographer } from './src/core/Choreographer.js';
-        import { IntegratedControlsCollapsible } from './src/ui/IntegratedControlsCollapsible.js';
-        import { XYTouchpad } from './src/ui/XYTouchpad.js';
-        import { VisualizerXYPad } from './src/ui/VisualizerXYPad.js';
-        import { VisualsMenu } from './src/ui/VisualsMenu.js';
-
-        let choreographer = null;
-        let xyTouchpad = null;
-        let visualizerXYPad = null;
-        let visualsMenu = null;
-        const statusDisplay = document.getElementById('status-display');
-
-        function addStatus(message, type = 'info') {
-            const line = document.createElement('div');
-            line.className = `status-line ${type}`;
-            line.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
-            statusDisplay.insertBefore(line, statusDisplay.firstChild);
-
-            // Keep only last 20 lines
-            while (statusDisplay.children.length > 20) {
-                statusDisplay.removeChild(statusDisplay.lastChild);
-            }
-        }
-
-        async function initChoreographer() {
-            try {
-                addStatus('Creating Choreographer instance...', 'info');
-                choreographer = new Choreographer();
-
-                addStatus('Initializing systems...', 'info');
-                await choreographer.init();
-
-                addStatus('Choreographer ready!', 'success');
-                document.getElementById('current-mode').textContent = 'READY';
-                document.getElementById('current-system').textContent = choreographer.currentSystem;
-
-                // Hide loading indicator
-                document.getElementById('loading-indicator').classList.add('hidden');
-
-                // Make available globally for debugging/testing
-                window.choreographer = choreographer;
-
-                // Initialize collapsible controls (properly connected to Choreographer)
-                window.integratedControls = new IntegratedControlsCollapsible(choreographer);
-
-                // Initialize separate Visuals Menu
-                visualsMenu = new VisualsMenu(choreographer);
-                window.visualsMenu = visualsMenu;
-
-                // Initialize XY Touchpad (with dropdowns)
-                xyTouchpad = new XYTouchpad(choreographer);
-                window.xyTouchpad = xyTouchpad;
-
-                // Initialize Visualizer XY Pad (invisible overlay, fixed Speed/Density)
-                visualizerXYPad = new VisualizerXYPad(choreographer);
-                window.visualizerXYPad = visualizerXYPad;
-
-                setupEventListeners();
-
-            } catch (error) {
-                addStatus(`Initialization error: ${error.message}`, 'error');
-                console.error('Choreographer init failed:', error);
-            }
-        }
-
-        function setupEventListeners() {
-            const smartBtn = document.getElementById('smart-audio-btn');
-            const fileInput = document.getElementById('audio-file-input-top');
-
-            // Smart Audio Button - morphs through states
-            smartBtn.addEventListener('click', () => {
-                const state = smartBtn.dataset.state;
-
-                if (state === 'load') {
-                    // Trigger file input
-                    fileInput.click();
-                } else if (state === 'play') {
-                    // Start playback
-                    choreographer.play().then(() => {
-                        smartBtn.dataset.state = 'playing';
-                        smartBtn.textContent = '⏸ PAUSE';
-                        addStatus('Playback started', 'success');
-                        document.getElementById('current-mode').textContent = choreographer.choreographyMode.toUpperCase();
-                    }).catch(error => {
-                        addStatus(`Play error: ${error.message}`, 'error');
-                    });
-                } else if (state === 'playing') {
-                    // Pause
-                    choreographer.pause();
-                    smartBtn.dataset.state = 'pause';
-                    smartBtn.textContent = '▶ PLAY';
-                    addStatus('Playback paused', 'info');
-                } else if (state === 'pause') {
-                    // Resume
-                    choreographer.play().then(() => {
-                        smartBtn.dataset.state = 'playing';
-                        smartBtn.textContent = '⏸ PAUSE';
-                        addStatus('Playback resumed', 'success');
-                    }).catch(error => {
-                        addStatus(`Play error: ${error.message}`, 'error');
-                    });
-                }
-            });
-
-            // Audio file upload
-            fileInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                addStatus(`Loading audio: ${file.name}`, 'info');
-                try {
-                    await choreographer.loadAudioFile(file);
-                    addStatus('Audio loaded successfully', 'success');
-                    document.getElementById('audio-status').textContent = file.name;
-                    document.getElementById('audio-status-top').textContent = file.name;
-
-                    // Morph button to play state
-                    smartBtn.dataset.state = 'play';
-                    smartBtn.textContent = '▶ PLAY';
-
-                    // Enable controls
-                    document.getElementById('analyze-btn').disabled = false;
-                    document.getElementById('export-video-btn').disabled = false;
-                    document.getElementById('manual-record-btn').disabled = false;
-
-                } catch (error) {
-                    addStatus(`Audio load error: ${error.message}`, 'error');
-                }
-            });
-
-            // Prominent Visualizer Tabs
-            document.querySelectorAll('.viz-tab').forEach(tab => {
-                tab.addEventListener('click', async () => {
-                    const system = tab.dataset.system;
-                    addStatus(`Switching to ${system} system...`, 'info');
-
-                    try {
-                        await choreographer.switchSystem(system);
-                        document.getElementById('current-system').textContent = system;
-                        document.getElementById('audio-status-top').textContent = `${system.toUpperCase()}`;
-
-                        // Update tab UI
-                        document.querySelectorAll('.viz-tab').forEach(t => {
-                            t.classList.toggle('active', t.dataset.system === system);
-                        });
-
-                        // Also update old system pills if they exist
-                        document.querySelectorAll('.system-pill').forEach(p => {
-                            p.classList.toggle('active', p.dataset.system === system);
-                        });
-
-                        addStatus(`Switched to ${system}`, 'success');
-                    } catch (error) {
-                        addStatus(`System switch error: ${error.message}`, 'error');
-                    }
-                });
-            });
-
-            // System switching (old pills in panel - keep for compatibility)
-            document.querySelectorAll('.system-pill').forEach(pill => {
-                pill.addEventListener('click', async () => {
-                    const system = pill.dataset.system;
-                    addStatus(`Switching to ${system} system...`, 'info');
-
-                    try {
-                        await choreographer.switchSystem(system);
-                        document.getElementById('current-system').textContent = system;
-                        document.getElementById('audio-status-top').textContent = `${system.toUpperCase()}`;
-
-                        // Update UI
-                        document.querySelectorAll('.system-pill').forEach(p => {
-                            p.classList.toggle('active', p.dataset.system === system);
-                        });
-
-                        // Update tabs
-                        document.querySelectorAll('.viz-tab').forEach(t => {
-                            t.classList.toggle('active', t.dataset.system === system);
-                        });
-
-                        addStatus(`Switched to ${system}`, 'success');
-                    } catch (error) {
-                        addStatus(`System switch error: ${error.message}`, 'error');
-                    }
-                });
-            });
-
-            // AI Analysis
-            document.getElementById('analyze-btn').addEventListener('click', async () => {
-                const apiKey = document.getElementById('gemini-api-key').value.trim();
-                if (!apiKey) {
-                    addStatus('Please enter Gemini API key', 'error');
-                    return;
-                }
-
-                addStatus('Starting AI analysis...', 'info');
-                try {
-                    const analysis = await choreographer.analyzeSongWithAI(apiKey);
-                    choreographer.applyAIChoreography(analysis);
-
-                    const sectionCount = analysis.sections ? analysis.sections.length : 0;
-                    document.getElementById('sequence-count').textContent = sectionCount;
-                    addStatus(`AI analysis complete: ${sectionCount} sections`, 'success');
-
-                } catch (error) {
-                    addStatus(`AI analysis error: ${error.message}`, 'error');
-                }
-            });
-
-            // Video Export
-            document.getElementById('export-video-btn').addEventListener('click', () => {
-                addStatus('Video export not yet implemented', 'info');
-                addStatus('RecordingEngine integration pending', 'info');
-            });
-
-            document.getElementById('manual-record-btn').addEventListener('click', () => {
-                addStatus('Manual recording not yet implemented', 'info');
-            });
-        }
-
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', () => {
-            addStatus('DOM ready, initializing...', 'info');
-            initChoreographer();
-        });
-    </script>
+    <script type="module" src="src/main.js"></script>
 </body>
 </html>

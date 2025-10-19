@@ -35,17 +35,37 @@ export class AudioAnalyzer {
     }
 
     /**
-     * Get current audio data for choreography (FIXED: method was missing!)
+     * Get current audio data for choreography and telemetry consumers.
+     * Consolidates smoothed band momentum, peak data, rhythm phase, and
+     * derived tempo metrics so downstream systems can operate off one
+     * canonical structure.
      */
     getAudioData() {
+        const bpm = this.getTempoBPM();
+        const spectral = this.getSpectralBalance();
+
         return {
+            // Smoothed momentum values (great for choreography easing)
             bass: this.energyMomentum.bass,
             mid: this.energyMomentum.mid,
             high: this.energyMomentum.high,
+
+            // Peak values (excellent for extreme hits / glitch bursts)
+            bassPeak: this.peakDetector.bass,
+            midPeak: this.peakDetector.mid,
+            highPeak: this.peakDetector.high,
+
+            // Combined energy and rhythm intelligence
             energy: this.peakDetector.energy,
-            isBeat: performance.now() - this.lastBeatTime < 100,
             beatPhase: this.beatPhase,
-            rhythmicPulse: this.rhythmicPulse
+            rhythmicPulse: this.rhythmicPulse,
+            isBeat: (performance.now() - this.lastBeatTime) < 100,
+
+            // Derived telemetry
+            bpm,
+            spectral,
+            genre: this.detectGenre(bpm, spectral),
+            genreConfidence: this.estimateGenreConfidence(spectral, bpm)
         };
     }
 
@@ -174,35 +194,70 @@ export class AudioAnalyzer {
         loop();
     }
 
-    /**
-     * Get current audio data for external use (e.g., color palette frequency-map, shader uniforms)
-     * Enhanced with MVEP-style frequency data for WebGL shaders
-     */
-    getAudioData() {
+    getTempoBPM() {
+        if (!this.avgBeatInterval) {
+            return 0;
+        }
+        return Math.round(60000 / this.avgBeatInterval);
+    }
+
+    getSpectralBalance() {
+        const bass = Math.max(this.energyMomentum.bass, 0);
+        const mid = Math.max(this.energyMomentum.mid, 0);
+        const high = Math.max(this.energyMomentum.high, 0);
+        const total = bass + mid + high || 1;
         return {
-            // Smoothed momentum values (good for choreography)
-            bass: this.energyMomentum.bass,
-            mid: this.energyMomentum.mid,
-            high: this.energyMomentum.high,
-
-            // Peak values (good for extreme effects)
-            bassPeak: this.peakDetector.bass,
-            midPeak: this.peakDetector.mid,
-            highPeak: this.peakDetector.high,
-
-            // Combined energy and rhythm
-            energy: this.peakDetector.energy,
-            beatPhase: this.beatPhase,
-            rhythmicPulse: this.rhythmicPulse,
-            isBeat: (performance.now() - this.lastBeatTime) < 100 // Beat happened in last 100ms
+            low: bass / total,
+            mid: mid / total,
+            high: high / total
         };
+    }
+
+    getMoodTelemetry() {
+        const audio = this.getAudioData();
+        return {
+            bpm: audio.bpm,
+            spectralBalance: audio.spectral,
+            genre: audio.genre,
+            genreConfidence: audio.genreConfidence,
+            energy: audio.energy,
+            rhythm: {
+                beatPhase: audio.beatPhase,
+                rhythmicPulse: audio.rhythmicPulse,
+                isBeat: audio.isBeat
+            },
+            peaks: {
+                bass: audio.bassPeak,
+                mid: audio.midPeak,
+                high: audio.highPeak
+            }
+        };
+    }
+
+    detectGenre(bpm, spectral) {
+        if (!spectral) return 'ambient';
+        const { low, mid, high } = spectral;
+
+        if (bpm >= 150 && high > 0.35) return 'drum-and-bass';
+        if (bpm >= 132 && high > 0.3) return 'techno';
+        if (bpm >= 118 && mid > 0.4) return 'progressive-house';
+        if (bpm >= 108 && low > 0.45) return 'future-bass';
+        if (bpm >= 90 && low > 0.5) return 'hip-hop';
+        if (bpm >= 70 && mid > 0.5) return 'downtempo';
+        return 'ambient';
+    }
+
+    estimateGenreConfidence(spectral, bpm) {
+        if (!spectral) return 0.3;
+        const spread = Math.max(spectral.low, spectral.mid, spectral.high);
+        const tempoWeight = bpm ? Math.min(1, bpm / 180) : 0.2;
+        return Math.min(1, (spread * 0.6) + (tempoWeight * 0.4));
     }
 
     /**
      * Get tempo in BPM
      */
     getBPM() {
-        if (this.avgBeatInterval === 0) return 0;
-        return Math.round(60000 / this.avgBeatInterval);
+        return this.getTempoBPM();
     }
 }

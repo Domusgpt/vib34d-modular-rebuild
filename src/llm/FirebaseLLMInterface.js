@@ -21,13 +21,13 @@ export class FirebaseLLMInterface {
     /**
      * Generate parameters from natural language description
      */
-    async generateParameters(description) {
+    async generateParameters(description, context = null) {
         if (!description || !description.trim()) {
             throw new Error('Description is required');
         }
 
         console.log('🔥 Generating parameters via Firebase Function for:', description);
-        
+
         try {
             const response = await fetch(this.functionUrl, {
                 method: 'POST',
@@ -35,7 +35,8 @@ export class FirebaseLLMInterface {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    description: description.trim()
+                    description: description.trim(),
+                    context: context || undefined
                 })
             });
             
@@ -55,9 +56,9 @@ export class FirebaseLLMInterface {
             console.log('🔥 Generated parameters via Firebase:', parameters);
             
             if (this.parameterCallback) {
-                this.parameterCallback(parameters);
+                this.parameterCallback(parameters, context);
             }
-            
+
             return parameters;
             
         } catch (error) {
