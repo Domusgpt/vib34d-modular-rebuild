@@ -40,10 +40,12 @@ export class XYTouchpad {
     init() {
         this.createTouchpad();
         this.attachListeners();
+        this.applyAxisAssignments();
     }
 
     createTouchpad() {
-        const container = document.getElementById('control-panel');
+        const zone = document.getElementById('controller-pad-zone');
+        const container = zone || document.getElementById('control-panel');
         if (!container) return;
 
         // Generate parameter options
@@ -77,9 +79,15 @@ export class XYTouchpad {
         `;
 
         // Insert at top of control panel
-        const h2 = container.querySelector('h2');
-        if (h2) {
-            h2.insertAdjacentHTML('afterend', touchpadHTML);
+        if (zone) {
+            zone.innerHTML = touchpadHTML;
+        } else {
+            const h2 = container.querySelector('h2');
+            if (h2) {
+                h2.insertAdjacentHTML('afterend', touchpadHTML);
+            } else {
+                container.insertAdjacentHTML('afterbegin', touchpadHTML);
+            }
         }
     }
 
@@ -96,6 +104,7 @@ export class XYTouchpad {
             xDropdown.addEventListener('change', (e) => {
                 this.xParam = e.target.value;
                 console.log(`XY Pad X-axis → ${this.paramConfigs[this.xParam].label}`);
+                this.applyAxisAssignments();
             });
         }
 
@@ -103,6 +112,7 @@ export class XYTouchpad {
             yDropdown.addEventListener('change', (e) => {
                 this.yParam = e.target.value;
                 console.log(`XY Pad Y-axis → ${this.paramConfigs[this.yParam].label}`);
+                this.applyAxisAssignments();
             });
         }
 
@@ -173,21 +183,9 @@ export class XYTouchpad {
         const normX = Math.max(0, Math.min(1, x / rect.width));
         const normY = Math.max(0, Math.min(1, 1 - (y / rect.height))); // Invert Y
 
-        // Get current parameter configs
-        const xConfig = this.paramConfigs[this.xParam];
-        const yConfig = this.paramConfigs[this.yParam];
-
-        // Map to parameter ranges
-        const xValue = xConfig.min + (normX * (xConfig.max - xConfig.min));
-        const yValue = yConfig.min + (normY * (yConfig.max - yConfig.min));
-
-        // Round if integer parameter
-        const xFinal = xConfig.step >= 1 ? Math.round(xValue) : xValue;
-        const yFinal = yConfig.step >= 1 ? Math.round(yValue) : yValue;
-
-        // Update choreographer
-        this.choreographer.setParameter(this.xParam, xFinal);
-        this.choreographer.setParameter(this.yParam, yFinal);
+        if (this.choreographer.sonicMatrix) {
+            this.choreographer.sonicMatrix.updatePadPosition('controller', normX, normY);
+        }
 
         // Update cursor position
         cursor.style.left = `${normX * 100}%`;
@@ -204,9 +202,16 @@ export class XYTouchpad {
     }
 
     cycleGeometry() {
-        const currentGeometry = this.choreographer.baseParams.geometry;
-        const nextGeometry = (currentGeometry % 24) + 1; // Cycle 1-24
-        this.choreographer.setParameter('geometry', nextGeometry);
+        if (this.choreographer.sonicMatrix) {
+            this.choreographer.sonicMatrix.nudgeBaseParameter('geometry', 1, {
+                quantize: 1,
+                wrap: { min: 1, max: 24, increment: 1 }
+            });
+        } else {
+            const currentGeometry = this.choreographer.baseParams.geometry;
+            const nextGeometry = (currentGeometry % 24) + 1; // Cycle 1-24
+            this.choreographer.setParameter('geometry', nextGeometry);
+        }
 
         // Visual feedback
         const touchpad = document.getElementById('xy-touchpad');
@@ -217,7 +222,7 @@ export class XYTouchpad {
             }, 200);
         }
 
-        console.log(`🔄 Geometry cycled: ${currentGeometry} → ${nextGeometry}`);
+        console.log('🔄 Geometry cycled via XY pad');
     }
 
     updateCursorFromParams() {
@@ -225,14 +230,28 @@ export class XYTouchpad {
         const cursor = touchpad?.querySelector('.touchpad-cursor');
         if (!touchpad || !cursor) return;
 
+        if (this.choreographer.sonicMatrix) {
+            const surface = this.choreographer.sonicMatrix.surfaceStates?.controller;
+            if (surface) {
+                cursor.style.left = `${surface.position.x * 100}%`;
+                cursor.style.top = `${(1 - surface.position.y) * 100}%`;
+                return;
+            }
+        }
+
         const speed = this.choreographer.baseParams.speed;
         const density = this.choreographer.baseParams.gridDensity;
 
-        // Reverse map to normalized values
         const normX = (speed - 0.1) / 9.9;
         const normY = (density - 1) / 99;
 
         cursor.style.left = `${normX * 100}%`;
         cursor.style.top = `${(1 - normY) * 100}%`;
+    }
+
+    applyAxisAssignments() {
+        if (!this.choreographer.sonicMatrix) return;
+        this.choreographer.sonicMatrix.setSurfaceAxisParameter('controller', 'x', this.xParam);
+        this.choreographer.sonicMatrix.setSurfaceAxisParameter('controller', 'y', this.yParam);
     }
 }
