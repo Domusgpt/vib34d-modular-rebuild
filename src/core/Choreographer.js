@@ -9,6 +9,7 @@ import { AudioAnalyzer } from './AudioAnalyzer.js';
 import { PerformanceMonitor } from './PerformanceMonitor.js';
 import { PresetManager } from './PresetManager.js';
 import { KeyboardController } from './KeyboardController.js';
+import { SonicControlMatrix } from './SonicControlMatrix.js';
 import { applyChoreographyMode } from '../choreography/ChoreographyModes.js';
 import { applyParameterSweeps } from '../choreography/ParameterSweeps.js';
 import { applyColorPalette } from '../choreography/ColorPalettes.js';
@@ -90,6 +91,8 @@ export class Choreographer {
         this.performanceMonitor = null;
         this.presetManager = null;
         this.keyboardController = null;
+        this.sonicMatrix = null;
+        this.sonicHUD = null;
     }
 
     async init() {
@@ -102,6 +105,9 @@ export class Choreographer {
 
         await this.initCanvases();
         await this.initCurrentSystem();
+
+        this.sonicMatrix = new SonicControlMatrix(this);
+        this.sonicMatrix.applyImmediate();
 
         // Start performance monitoring
         this.performanceMonitor.start();
@@ -287,7 +293,20 @@ export class Choreographer {
         // Update base parameter
         this.baseParams[param] = value;
 
-        // Update ALL systems
+        if (this.sonicMatrix) {
+            this.sonicMatrix.updateBaseParameter(param, value);
+            this.sonicMatrix.applyImmediate();
+            return;
+        }
+
+        this.applyLiveParameter(param, value);
+    }
+
+    getCurrentParameters() {
+        return { ...this.baseParams };
+    }
+
+    applyLiveParameter(param, value) {
         Object.values(this.systems).forEach(sys => {
             if (!sys.engine) return;
 
@@ -302,7 +321,7 @@ export class Choreographer {
                 const params = this.baseParams;
                 sys.engine.visualizers.forEach(visualizer => {
                     if (visualizer.updateParameters) {
-                        visualizer.updateParameters(params);
+                        visualizer.updateParameters({ ...params, [param]: value });
                     }
                 });
             }
@@ -311,10 +330,6 @@ export class Choreographer {
                 sys.engine.updateParameter(param, value);
             }
         });
-    }
-
-    getCurrentParameters() {
-        return { ...this.baseParams };
     }
 
     setupAudio() {
@@ -388,16 +403,32 @@ export class Choreographer {
         const sys = this.systems[this.currentSystem];
         if (!sys.engine) return;
 
-        const setParam = (param, value) => {
-            if (sys.engine.parameterManager && sys.engine.parameterManager.setParameter) {
-                sys.engine.parameterManager.setParameter(param, value);
-            } else if (sys.engine.updateParameter) {
-                sys.engine.updateParameter(param, value);
-            }
+        const choreographyTargets = {};
+        const captureParam = (param, value) => {
+            choreographyTargets[param] = value;
         };
 
-        // Use ChoreographyModes module
-        applyChoreographyMode(this.choreographyMode, audioData, setParam, strength, this.baseParams);
+        applyChoreographyMode(this.choreographyMode, audioData, captureParam, strength, this.baseParams);
+
+        let frameInfo = null;
+        if (this.sonicMatrix) {
+            frameInfo = this.sonicMatrix.apply(audioData, choreographyTargets);
+        } else {
+            Object.entries(choreographyTargets).forEach(([param, value]) => {
+                this.applyLiveParameter(param, value);
+            });
+        }
+
+        if (this.sonicHUD && frameInfo) {
+            this.sonicHUD.update(frameInfo);
+        }
+    }
+
+    registerSonicHUD(hud) {
+        this.sonicHUD = hud;
+        if (this.sonicMatrix && this.sonicMatrix.getLastFrameInfo()) {
+            this.sonicHUD.update(this.sonicMatrix.getLastFrameInfo());
+        }
     }
 
     async analyzeSongWithAI(apiKey) {

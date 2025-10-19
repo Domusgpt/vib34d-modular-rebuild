@@ -18,9 +18,11 @@ import { IntegratedControlsCollapsible } from './ui/IntegratedControlsCollapsibl
 import { VisualsMenu } from './ui/VisualsMenu.js';
 import { XYTouchpad } from './ui/XYTouchpad.js';
 import { VisualizerXYPad } from './ui/VisualizerXYPad.js';
+import { SonicHUD } from './ui/SonicHUD.js';
+import { ResponsiveLayoutManager } from './ui/layout/ResponsiveLayoutManager.js';
 
 // 🧪 TEST: New UI Redesign Components
-import { initTestUI } from './ui/redesign/test-core-panel.js';
+import { SonicStudioShell } from './ui/studio/SonicStudioShell.js';
 
 // 📱 Mobile UI Components
 import { MobileControlDrawer } from './ui/mobile/MobileControlDrawer.js';
@@ -94,7 +96,17 @@ window.addEventListener('DOMContentLoaded', async () => {
         console.log('Initializing VisualizerXYPad...');
         window.visualizerXYPad = new VisualizerXYPad(choreographer);
 
-        console.log('✅ All UI components initialized');
+        console.log('Initializing SonicHUD...');
+        window.sonicHUD = new SonicHUD(choreographer);
+        choreographer.registerSonicHUD(window.sonicHUD);
+
+        console.log('Initializing ResponsiveLayoutManager...');
+        window.layoutManager = new ResponsiveLayoutManager();
+
+        console.log('Initializing SonicStudioShell...');
+        window.studioShell = new SonicStudioShell(choreographer, { isMobile });
+
+        console.log('✅ Core UI components initialized');
 
         // Initialize appropriate UI based on device type
         if (isMobile) {
@@ -105,16 +117,6 @@ window.addEventListener('DOMContentLoaded', async () => {
             console.log('   👆 Swipe up from bottom to access controls');
             console.log('   🎯 4 tabs: Quick, Geometry, Rotation, Style');
             console.log('   📐 Large touch targets (48px minimum)');
-        } else {
-            // 🖥️ Desktop: Use draggable panel system
-            console.log('🧪 Initializing Desktop Panel System...');
-            window.testUI = initTestUI(choreographer);
-            console.log('✅ Desktop UI initialized');
-            console.log('   📦 5 panels created (check right side)');
-            console.log('   🎯 Status badge (bottom-right corner)');
-            console.log('   ➕ Canvas crosshair (move cursor)');
-            console.log('   🖱️ Drag panels by header');
-            console.log('   🔄 Double-click header to collapse/expand');
         }
 
         // Make modules available for debugging
@@ -123,7 +125,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         console.log('🔧 Debug: window.choreographer available');
         console.log('🔧 Debug: window.integratedControls available');
         console.log('🔧 Debug: window.visualsMenu available');
-        console.log(isMobile ? '🔧 Debug: window.mobileDrawer available' : '🔧 Debug: window.testUI available (desktop panels)');
+        console.log(isMobile ? '🔧 Debug: window.mobileDrawer available' : '🔧 Debug: window.studioShell available (desktop shell)');
 
     } catch (error) {
         console.error('❌ Failed to initialize:', error);
