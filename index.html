@@ -13,9 +13,20 @@
 
         body {
             font-family: 'Courier New', monospace;
-            background: #000;
+            background: radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.12), transparent 45%),
+                        radial-gradient(circle at 80% 30%, rgba(255, 0, 200, 0.14), transparent 55%),
+                        radial-gradient(circle at 50% 80%, rgba(120, 60, 255, 0.12), transparent 60%),
+                        #02030f;
             color: #0ff;
             overflow: hidden;
+            min-height: 100vh;
+        }
+
+        body.canvas-pad-hold {
+            background: radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.18), transparent 45%),
+                        radial-gradient(circle at 80% 30%, rgba(255, 0, 200, 0.2), transparent 55%),
+                        radial-gradient(circle at 50% 80%, rgba(120, 60, 255, 0.18), transparent 60%),
+                        #02030f;
         }
 
         #stage-container {
@@ -24,8 +35,18 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: #000;
+            background: linear-gradient(180deg, rgba(0, 10, 25, 0.9), rgba(0, 0, 0, 0.98));
             z-index: 1;
+            overflow: hidden;
+        }
+
+        #stage-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.12), transparent 60%);
+            mix-blend-mode: screen;
+            pointer-events: none;
         }
 
         /* Top control bar - COMPACT REDESIGN */
@@ -576,32 +597,36 @@
             position: relative;
             width: 100%;
             height: 240px;
-            background: rgba(0, 255, 255, 0.05);
-            border: 2px solid #0ff;
-            border-radius: 8px;
-            margin: 15px 0;
+            background: linear-gradient(135deg, rgba(0, 40, 60, 0.45), rgba(0, 0, 0, 0.75));
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            border-radius: 14px;
+            margin: 18px 0 24px;
             cursor: crosshair;
             overflow: visible;
             transition: all 0.3s ease;
+            box-shadow: 0 12px 35px rgba(0, 40, 80, 0.35);
+            backdrop-filter: blur(18px) saturate(160%);
         }
 
         .xy-touchpad:hover {
-            background: rgba(0, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            border-color: rgba(0, 255, 255, 0.7);
+            box-shadow: 0 18px 42px rgba(0, 255, 255, 0.22);
         }
 
         .touchpad-controls {
             position: absolute;
-            top: -35px;
+            top: -38px;
             left: 0;
             right: 0;
             display: flex;
             gap: 10px;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #0ff;
-            border-radius: 4px;
+            padding: 6px 10px;
+            background: linear-gradient(135deg, rgba(0, 10, 20, 0.85), rgba(0, 0, 0, 0.6));
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            border-radius: 10px;
             z-index: 10;
+            backdrop-filter: blur(16px) saturate(150%);
+            box-shadow: 0 10px 25px rgba(0, 100, 160, 0.35);
         }
 
         .touchpad-dropdown-wrapper {
@@ -613,8 +638,10 @@
 
         .touchpad-dropdown-wrapper label {
             font-size: 10px;
-            color: #0ff;
+            color: rgba(200, 255, 255, 0.9);
             min-width: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .touchpad-dropdown {
@@ -662,14 +689,16 @@
 
         .touchpad-cursor {
             position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #0ff;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(0, 255, 255, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.8);
             border-radius: 50%;
-            box-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.7), 0 0 30px rgba(0, 120, 255, 0.4);
             transform: translate(-50%, -50%);
             pointer-events: none;
-            transition: all 0.1s ease;
+            transition: all 0.12s ease;
+            backdrop-filter: blur(4px);
         }
 
         .touchpad-hint {
@@ -678,8 +707,8 @@
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 10px;
-            color: #0ff;
-            opacity: 0.3;
+            color: rgba(180, 255, 255, 0.6);
+            opacity: 0.4;
             pointer-events: none;
             text-align: center;
         }
@@ -833,6 +862,200 @@
             height: 100%;
             border-radius: 8px 8px 0 0;
             font-size: 16px;
+        }
+
+        /* Holographic sonic overlay */
+        #holographic-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 80;
+        }
+
+        .glass-hud {
+            position: absolute;
+            bottom: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(480px, 92vw);
+            padding: 18px 22px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(5, 15, 25, 0.76), rgba(15, 40, 65, 0.58));
+            border: 1px solid rgba(0, 255, 255, 0.35);
+            box-shadow: 0 22px 45px rgba(0, 0, 0, 0.45), inset 0 0 30px rgba(0, 255, 255, 0.1);
+            backdrop-filter: blur(24px) saturate(180%);
+            color: #d6ffff;
+            display: grid;
+            gap: 16px;
+        }
+
+        .glass-hud .hud-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .glass-hud .hud-title {
+            font-weight: 700;
+            color: #bdfdff;
+            text-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
+        }
+
+        .glass-hud .hud-mode {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .hud-spectrum {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .hud-spectrum .channel-label {
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.65;
+            margin-bottom: 4px;
+        }
+
+        .hud-spectrum .bar {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 255, 255, 0.16);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .hud-spectrum .bar span {
+            position: absolute;
+            inset: 0;
+            transform-origin: left center;
+            transform: scaleX(0);
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0.5), rgba(255, 0, 200, 0.5));
+            transition: transform 0.2s ease;
+        }
+
+        .hud-pad-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hud-pad-grid .pad-card {
+            background: rgba(0, 0, 0, 0.32);
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            border-radius: 12px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .pad-position {
+            font-size: 11px;
+            color: #ffffff;
+        }
+
+        .hold-indicator {
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            background: rgba(0, 255, 255, 0.12);
+            color: rgba(200, 255, 255, 0.85);
+        }
+
+        .hold-indicator.is-active {
+            background: rgba(255, 0, 180, 0.25);
+            border-color: rgba(255, 0, 180, 0.6);
+            color: #ffe3ff;
+        }
+
+        .hud-assignment {
+            display: grid;
+            gap: 6px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.85;
+        }
+
+        .hud-assignment span {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .hud-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.75;
+        }
+
+        .hud-footer strong {
+            color: #ffffff;
+        }
+
+        /* Responsive layout adjustments */
+        #control-panel.is-floating {
+            top: auto;
+            bottom: 24px;
+            right: 24px;
+            max-height: 60vh;
+        }
+
+        #control-panel.auto-collapsed:not(.collapsed) {
+            width: 260px;
+        }
+
+        body.layout-compact #control-panel:not(.collapsed) {
+            max-height: calc(100vh - 120px);
+        }
+
+        body.layout-stacked #visuals-panel {
+            bottom: 110px;
+        }
+
+        #top-bar.is-compact {
+            height: 52px;
+            padding: 6px 12px;
+        }
+
+        @media (max-width: 920px) {
+            .glass-hud {
+                bottom: auto;
+                top: 70px;
+                transform: translate(-50%, 0);
+                width: min(520px, 92vw);
+            }
+        }
+
+        @media (max-width: 720px) {
+            .glass-hud {
+                top: 60px;
+                width: 94vw;
+            }
+
+            .hud-spectrum {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                row-gap: 10px;
+            }
+
+            .hud-pad-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Tab labels - only show when collapsed */
@@ -1006,6 +1229,59 @@
 
     <div id="stage-container">
         <!-- Canvas container - dynamically created per system -->
+    </div>
+
+    <div id="holographic-overlay">
+        <div class="glass-hud" id="sonic-hud">
+            <div class="hud-header">
+                <span class="hud-title">Sonic Sculptor</span>
+                <span class="hud-mode" data-hud="mode">INIT</span>
+            </div>
+            <div class="hud-spectrum">
+                <div>
+                    <div class="channel-label">Bass</div>
+                    <div class="bar" data-channel="bass"><span></span></div>
+                </div>
+                <div>
+                    <div class="channel-label">Mid</div>
+                    <div class="bar" data-channel="mid"><span></span></div>
+                </div>
+                <div>
+                    <div class="channel-label">High</div>
+                    <div class="bar" data-channel="high"><span></span></div>
+                </div>
+                <div>
+                    <div class="channel-label">Energy</div>
+                    <div class="bar" data-channel="energy"><span></span></div>
+                </div>
+            </div>
+            <div class="hud-pad-grid">
+                <div class="pad-card">
+                    <div>
+                        <div>Controller Pad</div>
+                        <div class="pad-position" data-pad="controller">50%, 50%</div>
+                    </div>
+                    <div class="hold-indicator" data-hold="controller">LIVE</div>
+                </div>
+                <div class="pad-card">
+                    <div>
+                        <div>Canvas Pad</div>
+                        <div class="pad-position" data-pad="canvas">50%, 50%</div>
+                    </div>
+                    <div class="hold-indicator" data-hold="canvas">LIVE</div>
+                </div>
+            </div>
+            <div class="hud-assignment">
+                <div>Controller X → <span data-assignment="controller-x">chaos</span></div>
+                <div>Controller Y → <span data-assignment="controller-y">speed</span></div>
+                <div>Canvas X → <span data-assignment="canvas-x">rot4dYW, glitchIntensity</span></div>
+                <div>Canvas Y → <span data-assignment="canvas-y">rot4dXW, intensity</span></div>
+            </div>
+            <div class="hud-footer">
+                <span>Intensity <strong data-hud="intensity">50%</strong></span>
+                <span>Audio Reactivity</span>
+            </div>
+        </div>
     </div>
 
     <div id="mode-display">
