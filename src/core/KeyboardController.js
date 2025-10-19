@@ -264,26 +264,19 @@ export class KeyboardController {
      * Adjust parameter value
      */
     adjustParameter(param, delta) {
+        if (this.choreographer.sonicMatrix) {
+            const options = {};
+            if (param === 'gridDensity') {
+                options.quantize = 1;
+            }
+            const newValue = this.choreographer.sonicMatrix.nudgeBaseParameter(param, delta, options);
+            console.log(`🎚️ Sonic sculpt → ${param} = ${newValue.toFixed(2)}`);
+            return;
+        }
+
         const current = this.choreographer.baseParams[param] || 0;
-        let newValue = current + delta;
-
-        // Clamp values
-        if (param === 'intensity' || param === 'chaos') {
-            newValue = Math.max(0, Math.min(1, newValue));
-        } else if (param === 'speed') {
-            newValue = Math.max(0.1, Math.min(5, newValue));
-        } else if (param === 'gridDensity') {
-            newValue = Math.max(1, Math.min(50, newValue));
-        }
-
-        this.choreographer.baseParams[param] = newValue;
-
-        const sys = this.choreographer.systems[this.choreographer.currentSystem];
-        if (sys.engine) {
-            this.choreographer.updateSystemParameters(sys.engine);
-        }
-
-        console.log(`📊 ${param} = ${newValue.toFixed(2)}`);
+        const newValue = current + delta;
+        this.choreographer.setParameter(param, newValue);
     }
 
     /**

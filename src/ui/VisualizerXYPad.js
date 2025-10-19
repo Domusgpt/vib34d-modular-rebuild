@@ -9,6 +9,8 @@ export class VisualizerXYPad {
     constructor(choreographer) {
         this.choreographer = choreographer;
         this.isDragging = false;
+        this.holdEnabled = false;
+        this.lastTapTime = 0;
         this.init();
     }
 
@@ -42,6 +44,8 @@ export class VisualizerXYPad {
             this.handleEnd();
         });
 
+        stageContainer.addEventListener('dblclick', () => this.toggleHold());
+
         console.log('✅ VisualizerXYPad attached to canvas');
     }
 
@@ -51,6 +55,10 @@ export class VisualizerXYPad {
             return;
         }
         this.isDragging = true;
+        if (this.choreographer.sonicMatrix) {
+            this.choreographer.sonicMatrix.setSurfaceHold('canvas', false);
+        }
+        this.detectTap();
         this.updateFromPosition(e);
     }
 
@@ -61,6 +69,9 @@ export class VisualizerXYPad {
 
     handleEnd() {
         this.isDragging = false;
+        if (this.choreographer.sonicMatrix) {
+            this.choreographer.sonicMatrix.setSurfaceHold('canvas', this.holdEnabled);
+        }
     }
 
     updateFromPosition(e) {
@@ -74,16 +85,26 @@ export class VisualizerXYPad {
         // Normalize to 0-1
         const normX = Math.max(0, Math.min(1, x / rect.width));
         const normY = Math.max(0, Math.min(1, 1 - (y / rect.height))); // Invert Y
+        if (this.choreographer.sonicMatrix) {
+            this.choreographer.sonicMatrix.updatePadPosition('canvas', normX, normY);
+        }
+    }
 
-        // FIXED MAPPING:
-        // X-axis: Speed (0.1 - 10)
-        const speed = 0.1 + (normX * 9.9);
+    detectTap() {
+        const now = performance.now();
+        if (now - this.lastTapTime < 300) {
+            this.toggleHold();
+        }
+        this.lastTapTime = now;
+    }
 
-        // Y-axis: Density (1 - 100)
-        const density = 1 + (normY * 99);
+    toggleHold() {
+        this.holdEnabled = !this.holdEnabled;
+        if (this.choreographer.sonicMatrix) {
+            const state = this.choreographer.sonicMatrix.toggleSurfaceHold('canvas');
+            this.holdEnabled = state;
+        }
 
-        // Update choreographer (no UI feedback)
-        this.choreographer.setParameter('speed', speed);
-        this.choreographer.setParameter('gridDensity', Math.round(density));
+        document.body.classList.toggle('canvas-pad-hold', this.holdEnabled);
     }
 }
