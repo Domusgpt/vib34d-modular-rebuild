@@ -18,6 +18,8 @@ import { IntegratedControlsCollapsible } from './ui/IntegratedControlsCollapsibl
 import { VisualsMenu } from './ui/VisualsMenu.js';
 import { XYTouchpad } from './ui/XYTouchpad.js';
 import { VisualizerXYPad } from './ui/VisualizerXYPad.js';
+import { SonicHUD } from './ui/SonicHUD.js';
+import { ResponsiveLayoutManager } from './ui/layout/ResponsiveLayoutManager.js';
 
 // 🧪 TEST: New UI Redesign Components
 import { initTestUI } from './ui/redesign/test-core-panel.js';
@@ -93,6 +95,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         // Initialize Visualizer XY Pad
         console.log('Initializing VisualizerXYPad...');
         window.visualizerXYPad = new VisualizerXYPad(choreographer);
+
+        console.log('Initializing SonicHUD...');
+        window.sonicHUD = new SonicHUD(choreographer);
+        choreographer.registerSonicHUD(window.sonicHUD);
+
+        console.log('Initializing ResponsiveLayoutManager...');
+        window.layoutManager = new ResponsiveLayoutManager();
 
         console.log('✅ All UI components initialized');
 
