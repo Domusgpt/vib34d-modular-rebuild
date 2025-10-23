@@ -1,240 +1,846 @@
+import { clamp } from '../utils/math.js';
+
 /**
  * LLM Parameter Interface for VIB34D
- * Converts natural language descriptions to VIB34D parameters using Gemini Flash 1.5
+ * Converts natural language descriptions to sonic mood profiles.
  */
-
 export class LLMParameterInterface {
     constructor() {
         // Try Firebase Function first, fallback to direct API
         this.useFirebase = true;
         this.firebaseUrl = 'https://us-central1-vib34d-llm-engine.cloudfunctions.net/generateVIB34DParameters';
-        
-        // Fallback to direct API if Firebase not available
-        this.apiKey = localStorage.getItem('vib34d-gemini-api-key') || null;
+
+        this.storage = typeof localStorage !== 'undefined' ? localStorage : null;
+        this.apiKey = this.storage?.getItem('vib34d-gemini-api-key') || null;
         this.baseApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
         this.parameterCallback = null;
-        
-        // Comprehensive system prompt with emotional/visual understanding
-        this.systemPrompt = `You are a synesthetic AI that translates human experience into 4-dimensional holographic mathematics.
 
-You control a VIB34D system with these parameters:
-- geometry (0-7): Tetrahedron, Hypercube, Sphere, Torus, Klein Bottle, Fractal, Wave, Crystal
-- hue (0-360), intensity (0-1), saturation (0-1)
+        this.parameterRanges = {
+            geometry: { min: 0, max: 7, type: 'int', default: 1 },
+            hue: { min: 0, max: 360, type: 'int', default: 200 },
+            intensity: { min: 0, max: 1, type: 'float', default: 0.55 },
+            saturation: { min: 0, max: 1, type: 'float', default: 0.7 },
+            speed: { min: 0.1, max: 3, type: 'float', default: 1.2 },
+            chaos: { min: 0, max: 1, type: 'float', default: 0.35 },
+            morphFactor: { min: 0, max: 2, type: 'float', default: 1 },
+            gridDensity: { min: 5, max: 100, type: 'int', default: 22 },
+            rot4dXW: { min: -6.28, max: 6.28, type: 'float', default: 0 },
+            rot4dYW: { min: -6.28, max: 6.28, type: 'float', default: 0 },
+            rot4dZW: { min: -6.28, max: 6.28, type: 'float', default: 0 },
+            glitchIntensity: { min: 0, max: 0.2, type: 'float', default: 0.05 },
+            moireScale: { min: 0.95, max: 1.05, type: 'float', default: 1 },
+            lineThickness: { min: 0.01, max: 0.1, type: 'float', default: 0.02 }
+        };
+
+        this.systemPrompt = `You are a synesthetic AI that translates human experience into holographic sonic moods for the VIB34D stage.
+
+You control these parameters (return values within the ranges):
+- geometry (0-7 integers)
+- hue (0-360 degrees)
+- intensity, saturation (0-1)
 - speed (0.1-3), chaos (0-1), morphFactor (0-2), gridDensity (5-100)
 - rot4dXW, rot4dYW, rot4dZW (-6.28 to 6.28)
+- glitchIntensity (0-0.2), moireScale (0.95-1.05), lineThickness (0.01-0.1)
 
-When given a description, use your understanding of:
-- Visual aesthetics and emotional resonance
-- Color theory and psychological associations
-- Movement, rhythm, and temporal dynamics
-- Mathematical beauty and complexity
-- Human perception and synesthesia
+Respond ONLY with JSON in the following format:
+{
+  "mood": {
+    "label": "Two or three word poetic title",
+    "description": "One sentence describing the vibe",
+    "keywords": ["keyword", "..."],
+    "energy": 0-1,
+    "colorTemperature": "warm|cool|electric|ambient"
+  },
+  "parameterTargets": { ... parameter values ... },
+  "reactivity": {
+    "global": 0.6-1.6,
+    "color": 0.5-1.6,
+    "motion": 0.5-1.7,
+    "geometry": 0.5-1.7,
+    "texture": 0.5-1.7
+  },
+  "palette": {
+    "primaryHue": 0-360,
+    "accentHue": 0-360,
+    "saturation": 0-1,
+    "intensity": 0-1,
+    "narrative": "brief color story"
+  }
+}
 
-Create a holographic experience that captures the essence of what they're describing.
-
-Think beyond literal interpretation. If someone says "the sound of silence," you might create subtle, barely-there patterns with minimal chaos and low intensity. If they say "cosmic loneliness," you might use vast empty spaces with occasional fractal details.
-
-Your goal is to create something that makes them say "YES, that's exactly what I meant, even though I couldn't have described it mathematically."
-
-Return only JSON with the parameter names above.`;
+Blend mood, color, and motion so the visuals feel emotionally true to the description.`;
     }
-    
-    /**
-     * Initialize with API key from localStorage or prompt user
-     */
+
     async initialize() {
-        // Check localStorage for existing API key
-        const storedKey = localStorage.getItem('vib34d-gemini-api-key');
+        const storedKey = this.storage?.getItem('vib34d-gemini-api-key');
         if (storedKey) {
             this.apiKey = storedKey;
             console.log('🔑 Gemini API key loaded from storage');
             return true;
         }
-        
-        // If no key, will be prompted when first used
+
         console.log('📝 Gemini API key will be requested on first use');
         return false;
     }
-    
-    /**
-     * Set API key and store it
-     */
+
     setApiKey(apiKey) {
         this.apiKey = apiKey;
-        localStorage.setItem('vib34d-gemini-api-key', apiKey);
-        console.log('🔑 Gemini API key saved');
+        if (this.storage) {
+            this.storage.setItem('vib34d-gemini-api-key', apiKey);
+            console.log('🔑 Gemini API key saved');
+        }
     }
-    
-    /**
-     * Set callback for parameter updates
-     */
+
     setParameterCallback(callback) {
         this.parameterCallback = callback;
     }
-    
-    /**
-     * Generate parameters from natural language description
-     */
-    async generateParameters(description) {
-        // Try Firebase Function first
+
+    async generateParameters(description, context = {}) {
+        if (!description || !description.trim()) {
+            throw new Error('Description is required');
+        }
+
+        const trimmed = description.trim();
+        const rawProfile = await this.fetchRawProfile(trimmed, context);
+        const profile = this.composeProfile(rawProfile, trimmed, context);
+
+        if (this.parameterCallback) {
+            this.parameterCallback(profile);
+        }
+
+        return profile;
+    }
+
+    async previewParameters(description, context = {}) {
+        if (!description || !description.trim()) {
+            throw new Error('Description is required');
+        }
+
+        const trimmed = description.trim();
+        const rawProfile = await this.fetchRawProfile(trimmed, context);
+        return this.composeProfile(rawProfile, trimmed, context);
+    }
+
+    async fetchRawProfile(description, context = {}) {
+        const errors = [];
+
         if (this.useFirebase) {
             try {
-                console.log('🔥 Trying Firebase Function first...');
-                return await this.generateViaFirebase(description);
+                return await this.generateViaFirebase(description, context);
             } catch (error) {
+                errors.push({ source: 'firebase', message: error?.message || String(error) });
                 console.warn('🔥 Firebase Function failed, falling back to direct API:', error.message);
-                this.useFirebase = false; // Disable for this session
+                this.useFirebase = false;
             }
         }
-        
-        // Fallback to direct API
-        console.log('🔍 Using direct API approach...');
-        console.log('🔍 Checking API key:', this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'NOT SET');
-        const hasValidKey = this.apiKey && this.apiKey.startsWith('AIza') && this.apiKey.length > 30;
-        console.log('🔍 API key valid:', hasValidKey);
-        
-        if (hasValidKey) {
-            // Try real API first
-            try {
-                // Try both authentication methods to see which works
-                const apiUrl = `${this.baseApiUrl}?key=${this.apiKey}`;
-                console.log('🤖 Making API request to:', apiUrl);
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `${this.systemPrompt}\n\nUser description: "${description}"\n\nGenerate JSON parameters:`
-                            }]
-                        }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 500,
-                            topP: 0.8,
-                            topK: 40
-                        }
-                    })
-                });
-                
-                console.log('🤖 API response status:', response.status);
-                console.log('🤖 API response ok:', response.ok);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('🤖 API response data:', data);
-                    const generatedText = data.candidates[0].content.parts[0].text;
-                    
-                    // Extract JSON from response
-                    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        const parameters = JSON.parse(jsonMatch[0]);
-                        const validated = this.validateParameters(parameters);
-                        
-                        console.log('🤖 Generated parameters via Gemini API:', validated);
-                        
-                        if (this.parameterCallback) {
-                            this.parameterCallback(validated);
-                        }
-                        
-                        return validated;
-                    }
-                } else {
-                    const errorText = await response.text();
-                    console.error('🤖 API request failed:', response.status, errorText);
-                    throw new Error(`API request failed: ${response.status} - ${errorText}`);
-                }
-            } catch (error) {
-                console.error('🤖 API request error:', error);
-                throw error;
-            }
-        }
-        
-        // No API key or API failed - just fail properly  
-        if (!this.apiKey) {
-            throw new Error('No API key set. Please enter your Gemini API key to use AI generation.');
-        } else {
-            throw new Error('API request failed. Please check your API key or network connection.');
+
+        try {
+            return await this.generateViaDirect(description, context);
+        } catch (error) {
+            errors.push({ source: 'gemini-direct', message: error?.message || String(error) });
+            console.warn('🤖 Direct Gemini request failed. Using heuristic fallback generator.', error);
+            return this.generateFallbackProfile(description, context, errors);
         }
     }
-    
-    /**
-     * Generate parameters via Firebase Function
-     */
-    async generateViaFirebase(description) {
+
+    async generateViaDirect(description, context = {}) {
+        console.log('🔍 Using direct Gemini API approach...');
+        console.log('🔍 Checking API key:', this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'NOT SET');
+
+        const hasValidKey = this.apiKey && this.apiKey.startsWith('AIza') && this.apiKey.length > 30;
+        console.log('🔍 API key valid:', hasValidKey);
+
+        if (!hasValidKey) {
+            throw new Error('No API key set. Please enter your Gemini API key to use AI generation.');
+        }
+
+        const apiUrl = `${this.baseApiUrl}?key=${this.apiKey}`;
+        console.log('🤖 Making API request to:', apiUrl);
+
+        const userPrompt = this.composeUserPrompt(description, context);
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: userPrompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.65,
+                    maxOutputTokens: 600,
+                    topP: 0.85,
+                    topK: 40
+                }
+            })
+        });
+
+        console.log('🤖 API response status:', response.status);
+        console.log('🤖 API response ok:', response.ok);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('🤖 API request failed:', response.status, errorText);
+            throw new Error(`API request failed: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('🤖 API response data:', data);
+        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!generatedText) {
+            throw new Error('Gemini response did not include text');
+        }
+
+        const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error('Gemini response did not include JSON');
+        }
+
+        try {
+            return JSON.parse(jsonMatch[0]);
+        } catch (error) {
+            console.error('Failed to parse Gemini JSON:', error);
+            throw new Error('Failed to parse Gemini response JSON');
+        }
+    }
+
+    async generateViaFirebase(description, context = {}) {
         const response = await fetch(this.firebaseUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                description: description.trim()
+                description: description.trim(),
+                context: this.sanitizeContext(context)
             })
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `Firebase Function error: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
-        if (!data.success || !data.parameters) {
+        if (!data.success || (!data.profile && !data.parameters)) {
             throw new Error('Invalid response from Firebase Function');
         }
-        
-        const parameters = data.parameters;
-        
-        console.log('🔥 Generated parameters via Firebase:', parameters);
-        
-        if (this.parameterCallback) {
-            this.parameterCallback(parameters);
-        }
-        
-        return parameters;
+
+        return data.profile || data.parameters;
     }
-    
-    /**
-     * Validate and clamp parameters to valid ranges
-     */
+
+    generateFallbackProfile(description, context = {}, errors = []) {
+        const text = description && description.trim()
+            ? description.trim()
+            : 'Offline mood sketch';
+        const tokens = this.tokenizeDescription(text);
+        const tokenSet = new Set(tokens);
+
+        const baseEnergy = Number.isFinite(context.energy)
+            ? clamp(context.energy, 0, 1)
+            : 0.55;
+        const energyBoostWords = ['intense', 'driving', 'rave', 'storm', 'wild', 'pulsing', 'thrill', 'rapid', 'rush', 'laser'];
+        const energyCalmWords = ['calm', 'ambient', 'slow', 'gentle', 'soothing', 'floating', 'drift', 'meditative', 'warmth'];
+        const energy = clamp(
+            baseEnergy
+                + 0.12 * this.countMatches(tokens, energyBoostWords)
+                - 0.12 * this.countMatches(tokens, energyCalmWords),
+            0.08,
+            0.98
+        );
+
+        const glitchWords = ['glitch', 'distorted', 'fractured', 'noisy', 'industrial', 'granular', 'dirty'];
+        const smoothWords = ['smooth', 'silky', 'liquid', 'velvet', 'glass', 'glide', 'silken'];
+        const glitchScore = this.countMatches(tokens, glitchWords);
+        const smoothScore = this.countMatches(tokens, smoothWords);
+        const textureTilt = clamp(0.5 + 0.12 * glitchScore - 0.12 * smoothScore, 0, 1);
+
+        const detailWords = ['fractal', 'geometry', 'lattice', 'crystal', 'patterned', 'tessellated', 'ornate'];
+        const detailScore = this.countMatches(tokens, detailWords);
+
+        const surrealWords = ['dream', 'cosmic', 'nebula', 'portal', 'phantom', 'ghost', 'holographic', 'fluid', 'aether'];
+        const surrealScore = this.countMatches(tokens, surrealWords);
+
+        const motionWords = ['swirl', 'spiral', 'orbit', 'spin', 'cascade', 'flow', 'surge', 'wave'];
+        const motionScore = this.countMatches(tokens, motionWords);
+
+        const warmWords = ['warm', 'ember', 'sunset', 'crimson', 'amber', 'scarlet', 'fire'];
+        const coolWords = ['cool', 'arctic', 'ocean', 'midnight', 'aqua', 'glacier', 'mist'];
+        const neonWords = ['neon', 'laser', 'cyber', 'electric', 'chrome', 'hologram', 'ultraviolet'];
+        const forestWords = ['forest', 'emerald', 'moss', 'verdant'];
+
+        const warmScore = this.countMatches(tokens, warmWords);
+        const coolScore = this.countMatches(tokens, coolWords);
+        const neonScore = this.countMatches(tokens, neonWords);
+        const forestScore = this.countMatches(tokens, forestWords);
+
+        let colorTemperature = 'ambient';
+        if (neonScore > warmScore && neonScore >= coolScore) {
+            colorTemperature = 'electric';
+        } else if (warmScore > coolScore && warmScore >= forestScore) {
+            colorTemperature = 'warm';
+        } else if (forestScore > 0 && forestScore >= warmScore && forestScore >= coolScore) {
+            colorTemperature = 'verdant';
+        } else if (coolScore > warmScore) {
+            colorTemperature = 'cool';
+        }
+
+        const baseHueMap = {
+            warm: 28,
+            cool: 205,
+            electric: 300,
+            verdant: 130,
+            ambient: 220
+        };
+        let primaryHue = baseHueMap[colorTemperature] ?? baseHueMap.ambient;
+        if (tokenSet.has('violet') || tokenSet.has('magenta')) {
+            primaryHue = 310;
+        } else if (tokenSet.has('gold')) {
+            primaryHue = 40;
+        } else if (tokenSet.has('cyan')) {
+            primaryHue = 180;
+        }
+
+        const accentShift = colorTemperature === 'electric' ? 70 : colorTemperature === 'warm' ? 140 : 115;
+        const accentHue = this.wrapHue(primaryHue + accentShift);
+        const saturation = clamp(
+            0.55 + 0.08 * energy + 0.1 * (neonScore - smoothScore) + 0.05 * detailScore,
+            0.25,
+            0.95
+        );
+        const intensity = clamp(
+            0.45 + 0.35 * energy + 0.08 * glitchScore - 0.12 * smoothScore,
+            0.2,
+            0.95
+        );
+        const paletteNarrative = `Offline ${colorTemperature} glow with ${textureTilt > 0.55 ? 'gritty' : 'silken'} movement.`;
+
+        const mapRange = (param, factor) => this.mapParameterRange(param, factor);
+        const geometry = mapRange('geometry', clamp(0.35 + 0.2 * detailScore + 0.15 * surrealScore, 0, 1));
+        const gridDensity = mapRange('gridDensity', clamp(0.4 + 0.25 * detailScore + 0.2 * energy, 0, 1));
+        const morphFactor = mapRange('morphFactor', clamp(0.35 + 0.25 * surrealScore + 0.15 * energy, 0, 1));
+        const chaos = mapRange('chaos', clamp(0.3 + 0.25 * energy + 0.15 * glitchScore, 0, 1));
+        const speed = mapRange('speed', clamp(0.35 + 0.55 * energy + 0.1 * motionScore, 0, 1));
+        const glitchIntensity = mapRange('glitchIntensity', clamp(0.25 * energy + 0.18 * glitchScore, 0, 1));
+        const moireScale = mapRange('moireScale', clamp(0.5 + 0.05 * smoothScore - 0.04 * glitchScore, 0, 1));
+        const lineThickness = mapRange('lineThickness', clamp(0.55 - 0.12 * detailScore - 0.08 * glitchScore + 0.1 * smoothScore, 0, 1));
+
+        const rotationIntensity = clamp(energy * 0.45 + 0.2 * motionScore + 0.1 * surrealScore, 0, 1);
+        const rot4dXW = this.rotationFromIntensity('rot4dXW', rotationIntensity, text, 'xw');
+        const rot4dYW = this.rotationFromIntensity('rot4dYW', rotationIntensity * 0.92, text, 'yw');
+        const rot4dZW = this.rotationFromIntensity('rot4dZW', rotationIntensity * 1.05, text, 'zw');
+
+        const parameters = {
+            geometry,
+            gridDensity,
+            morphFactor,
+            chaos,
+            speed,
+            hue: this.wrapHue(primaryHue),
+            intensity,
+            saturation,
+            rot4dXW,
+            rot4dYW,
+            rot4dZW,
+            glitchIntensity,
+            moireScale,
+            lineThickness
+        };
+
+        const reactivity = {
+            global: clamp(0.95 + 0.35 * energy, 0.6, 1.6),
+            color: clamp(0.85 + 0.35 * saturation + 0.1 * neonScore, 0.5, 1.6),
+            motion: clamp(0.9 + 0.45 * energy + 0.2 * motionScore, 0.6, 1.7),
+            geometry: clamp(0.8 + 0.35 * detailScore + 0.15 * surrealScore, 0.5, 1.7),
+            texture: clamp(0.85 + 0.25 * textureTilt + 0.2 * glitchScore, 0.5, 1.7)
+        };
+
+        const keywords = this.extractKeywords(text);
+        const label = this.generateLabelFromDescription(text);
+        const vibeDescriptor = energy > 0.66
+            ? 'driving'
+            : energy < 0.35
+                ? 'floating'
+                : 'steady';
+        const moodDescription = `${label} rendered as a ${vibeDescriptor} ${colorTemperature} field with ${textureTilt > 0.55 ? 'grainy' : 'glasslike'} textures.`;
+
+        const palette = {
+            primaryHue: this.wrapHue(primaryHue),
+            accentHue,
+            saturation,
+            intensity,
+            narrative: paletteNarrative
+        };
+
+        const metadata = {
+            origin: 'offline-fallback',
+            fallback: true,
+            notes: 'Heuristic mood synthesis used because network AI providers were unavailable.',
+            errors: errors.filter(Boolean),
+            context: this.sanitizeContext(context)
+        };
+
+        return {
+            source: 'offline-fallback',
+            mood: {
+                label: label || 'Offline Mood',
+                description: moodDescription,
+                keywords,
+                energy,
+                colorTemperature,
+                narrative: paletteNarrative
+            },
+            parameterTargets: parameters,
+            reactivity,
+            palette,
+            keywords,
+            metadata
+        };
+    }
+
+    composeUserPrompt(description, context = {}) {
+        const contextText = this.describeContext(context);
+        return `${this.systemPrompt}\n\nLive context:\n${contextText}\n\nUser description: "${description}"\n\nReturn JSON:`;
+    }
+
+    describeContext(context = {}) {
+        const lines = [];
+        if (Number.isFinite(context.bpm) && context.bpm > 0) {
+            lines.push(`- Tempo around ${Math.round(context.bpm)} BPM.`);
+        }
+        if (Number.isFinite(context.energy)) {
+            lines.push(`- Overall energy near ${(context.energy * 100).toFixed(0)}%.`);
+        }
+        if (context.spectralBalance) {
+            const balance = context.spectralBalance;
+            const bass = Math.round((balance.bass ?? 0) * 100);
+            const mid = Math.round((balance.mid ?? 0) * 100);
+            const high = Math.round((balance.high ?? 0) * 100);
+            const signature = balance.signature || context.spectralSignature || 'balanced';
+            lines.push(`- Spectral mix ${signature}: bass ${bass}%, mid ${mid}%, high ${high}%.`);
+        } else if (context.spectralSignature) {
+            lines.push(`- Spectral mix ${context.spectralSignature}.`);
+        }
+        if (context.genre) {
+            lines.push(`- Detected vibe leans toward ${String(context.genre)}.`);
+        }
+        if (Array.isArray(context.timeline) && context.timeline.length) {
+            lines.push('- Storyboard plan:');
+            context.timeline.slice(-4).forEach(entry => {
+                const start = Math.round(entry.startTime ?? 0);
+                const duration = Math.max(1, Math.round(entry.duration ?? 0));
+                const label = entry.label ? String(entry.label).trim() : 'Unnamed mood';
+                const manual = Math.round((entry.manualInfluence ?? 0) * 100);
+                lines.push(`  • ${label} @${start}s for ${duration}s (manual blend ${manual}%).`);
+            });
+        }
+        if (!lines.length) {
+            lines.push('- React directly to the performer prompt while keeping visuals musical.');
+        }
+        return lines.join('\n');
+    }
+
+    sanitizeContext(context = {}) {
+        if (!context || typeof context !== 'object') {
+            return {};
+        }
+
+        const sanitized = {};
+        if (Number.isFinite(context.bpm)) {
+            sanitized.bpm = context.bpm;
+        }
+        if (Number.isFinite(context.energy)) {
+            sanitized.energy = clamp(context.energy, 0, 1);
+        }
+        if (context.genre) {
+            sanitized.genre = String(context.genre);
+        }
+        if (context.spectralBalance) {
+            sanitized.spectralBalance = {
+                bass: clamp(Number(context.spectralBalance.bass) || 0, 0, 1),
+                mid: clamp(Number(context.spectralBalance.mid) || 0, 0, 1),
+                high: clamp(Number(context.spectralBalance.high) || 0, 0, 1),
+                signature: context.spectralBalance.signature || context.spectralSignature || undefined
+            };
+        }
+        if (Array.isArray(context.timeline)) {
+            sanitized.timeline = context.timeline.slice(-8).map(entry => ({
+                id: entry.id,
+                label: entry.label,
+                startTime: Number.isFinite(entry.startTime) ? entry.startTime : 0,
+                duration: Number.isFinite(entry.duration) ? entry.duration : 0,
+                manualInfluence: clamp(entry.manualInfluence ?? 0, 0, 1)
+            }));
+        }
+
+        return sanitized;
+    }
+
+    composeProfile(raw, description, context = {}) {
+        const rawObject = this.ensureObject(raw);
+        const baseParameters = rawObject.parameterTargets || rawObject.parameters || rawObject.params || rawObject;
+        let parameters = this.validateParameters(baseParameters || {});
+
+        if (Object.keys(parameters).length === 0) {
+            parameters = this.createDefaultParameters();
+        }
+
+        const metrics = this.deriveMetrics(parameters);
+        const palette = this.composePalette(rawObject.palette, parameters);
+        const mood = this.composeMood(rawObject.mood, rawObject, description, metrics, palette);
+        const reactivity = this.composeReactivity(rawObject.reactivity || rawObject.reactivityBias, metrics);
+        const keywords = Array.isArray(rawObject.keywords)
+            ? rawObject.keywords
+            : mood.keywords;
+
+        const source = rawObject.source
+            || rawObject.metadata?.origin
+            || (this.useFirebase ? 'firebase-llm' : 'gemini-direct');
+
+        return {
+            prompt: description,
+            source,
+            timestamp: Date.now(),
+            parameters,
+            palette,
+            mood,
+            reactivity,
+            metrics,
+            keywords,
+            metadata: {
+                ...(rawObject.metadata || {}),
+                rawResponse: rawObject,
+                liveContext: this.sanitizeContext(context)
+            }
+        };
+    }
+
+    ensureObject(raw) {
+        if (!raw) return {};
+        if (typeof raw === 'string') {
+            try {
+                return JSON.parse(raw);
+            } catch (error) {
+                console.warn('Failed to parse raw LLM string, falling back to empty object');
+                return {};
+            }
+        }
+        if (Array.isArray(raw)) {
+            return raw[0] || {};
+        }
+        if (typeof raw === 'object') {
+            return raw;
+        }
+        return {};
+    }
+
+    createDefaultParameters() {
+        const defaults = {};
+        Object.entries(this.parameterRanges).forEach(([param, range]) => {
+            if (range.default !== undefined) {
+                defaults[param] = range.default;
+            }
+        });
+        return defaults;
+    }
+
+    composeMood(mood, rawObject, description, metrics, palette) {
+        const label = (mood && mood.label)
+            || rawObject.moodLabel
+            || this.generateLabelFromDescription(description);
+
+        const descriptionText = (mood && mood.description)
+            || rawObject.moodDescription
+            || `Sonic interpretation of ${description}`;
+
+        const energy = this.coerceNumber(
+            mood?.energy ?? rawObject.energy,
+            0,
+            1,
+            metrics.energy
+        );
+
+        const colorTemperature = (mood && mood.colorTemperature)
+            || rawObject.colorTemperature
+            || this.estimateColorTemperature(palette.primaryHue, palette.saturation);
+
+        const keywords = Array.isArray(mood?.keywords)
+            ? mood.keywords
+            : this.extractKeywords(description);
+
+        return {
+            label,
+            description: descriptionText,
+            energy,
+            colorTemperature,
+            keywords,
+            emotions: mood?.emotions || rawObject.emotions || [],
+            narrative: mood?.narrative || rawObject.narrative || palette.narrative
+        };
+    }
+
+    composePalette(rawPalette, parameters) {
+        const hue = this.coerceNumber(parameters.hue, 0, 360, 200);
+        const saturation = this.coerceNumber(parameters.saturation, 0, 1, 0.7);
+        const intensity = this.coerceNumber(parameters.intensity, 0, 1, 0.55);
+
+        if (rawPalette && typeof rawPalette === 'object') {
+            return {
+                primaryHue: this.wrapHue(this.coerceNumber(rawPalette.primaryHue, 0, 360, hue)),
+                accentHue: this.wrapHue(this.coerceNumber(rawPalette.accentHue, 0, 360, (hue + 120) % 360)),
+                saturation: this.coerceNumber(rawPalette.saturation, 0, 1, saturation),
+                intensity: this.coerceNumber(rawPalette.intensity, 0, 1, intensity),
+                narrative: rawPalette.narrative || rawPalette.description || 'AI composed chroma story'
+            };
+        }
+
+        return {
+            primaryHue: this.wrapHue(hue),
+            accentHue: this.wrapHue((hue + 140) % 360),
+            saturation,
+            intensity,
+            narrative: 'Auto-derived from mood parameters'
+        };
+    }
+
+    composeReactivity(rawReactivity, metrics) {
+        if (rawReactivity && typeof rawReactivity === 'object') {
+            const normalized = {};
+            Object.entries(rawReactivity).forEach(([key, value]) => {
+                const numeric = parseFloat(value);
+                if (!Number.isFinite(numeric)) return;
+                normalized[key] = clamp(numeric, 0.5, 1.8);
+            });
+            if (!('global' in normalized)) {
+                normalized.global = clamp(0.75 + (metrics.energy ?? 0.5) * 0.45, 0.6, 1.6);
+            }
+            return normalized;
+        }
+
+        return {
+            global: clamp(0.75 + (metrics.energy ?? 0.5) * 0.45, 0.6, 1.6),
+            color: clamp(0.7 + (metrics.brightness ?? 0.5) * 0.55, 0.5, 1.6),
+            motion: clamp(0.7 + (metrics.motion ?? 0.5) * 0.6, 0.5, 1.7),
+            geometry: clamp(0.65 + (metrics.complexity ?? 0.5) * 0.6, 0.5, 1.7),
+            texture: clamp(0.65 + (metrics.texture ?? 0.5) * 0.6, 0.5, 1.7)
+        };
+    }
+
+    deriveMetrics(parameters) {
+        const energy = this.average([
+            this.normalizeParameterValue('speed', parameters.speed),
+            this.normalizeParameterValue('chaos', parameters.chaos),
+            this.normalizeParameterValue('intensity', parameters.intensity)
+        ]);
+
+        const brightness = this.average([
+            this.normalizeParameterValue('intensity', parameters.intensity),
+            this.normalizeParameterValue('saturation', parameters.saturation)
+        ]);
+
+        const motion = this.average([
+            this.normalizeParameterValue('speed', parameters.speed),
+            Math.abs(parameters.rot4dXW || 0) / this.parameterRanges.rot4dXW.max,
+            Math.abs(parameters.rot4dYW || 0) / this.parameterRanges.rot4dYW.max,
+            Math.abs(parameters.rot4dZW || 0) / this.parameterRanges.rot4dZW.max
+        ]);
+
+        const complexity = this.average([
+            this.normalizeParameterValue('geometry', parameters.geometry),
+            this.normalizeParameterValue('gridDensity', parameters.gridDensity),
+            this.normalizeParameterValue('morphFactor', parameters.morphFactor)
+        ]);
+
+        const texture = this.average([
+            this.normalizeParameterValue('chaos', parameters.chaos),
+            this.normalizeParameterValue('glitchIntensity', parameters.glitchIntensity),
+            this.normalizeParameterValue('lineThickness', parameters.lineThickness)
+        ]);
+
+        return {
+            energy,
+            brightness,
+            motion,
+            complexity,
+            texture
+        };
+    }
+
+    normalizeParameterValue(param, value) {
+        const range = this.parameterRanges[param];
+        if (!range) return 0;
+        const numeric = parseFloat(value);
+        const fallback = range.default !== undefined
+            ? (range.default - range.min) / (range.max - range.min)
+            : 0.5;
+
+        if (!Number.isFinite(numeric)) {
+            return clamp(fallback, 0, 1);
+        }
+
+        if (range.max === range.min) {
+            return 0;
+        }
+
+        const normalized = (numeric - range.min) / (range.max - range.min);
+        return clamp(normalized, 0, 1);
+    }
+
+    coerceNumber(value, min, max, fallback = null) {
+        const numeric = parseFloat(value);
+        if (Number.isFinite(numeric)) {
+            return clamp(numeric, min, max);
+        }
+        if (fallback !== null && fallback !== undefined) {
+            return clamp(fallback, min, max);
+        }
+        return clamp((min + max) / 2, min, max);
+    }
+
+    generateLabelFromDescription(description) {
+        if (!description) return 'Custom Sculpt';
+        const words = description
+            .split(/[^a-zA-Z0-9]+/)
+            .filter(Boolean)
+            .map(word => word.trim())
+            .filter(word => word.length > 2)
+            .slice(0, 3)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+
+        if (!words.length) {
+            return 'Custom Sculpt';
+        }
+
+        return words.join(' ');
+    }
+
+    extractKeywords(description) {
+        if (!description) return [];
+        return description
+            .toLowerCase()
+            .split(/[^a-z0-9]+/)
+            .filter(word => word.length > 2)
+            .slice(0, 5);
+    }
+
+    estimateColorTemperature(hue, saturation = 0.6) {
+        if (!Number.isFinite(hue)) {
+            return 'ambient';
+        }
+
+        const wrapped = this.wrapHue(hue);
+
+        if (wrapped >= 330 || wrapped < 45) {
+            return saturation > 0.6 ? 'volcanic' : 'warm';
+        }
+        if (wrapped < 120) {
+            return 'sunrise';
+        }
+        if (wrapped < 210) {
+            return 'cool';
+        }
+        if (wrapped < 285) {
+            return saturation > 0.6 ? 'electric' : 'violet';
+        }
+        return saturation > 0.6 ? 'neon' : 'magenta';
+    }
+
+    wrapHue(hue) {
+        if (!Number.isFinite(hue)) {
+            return 0;
+        }
+        const wrapped = hue % 360;
+        return wrapped < 0 ? wrapped + 360 : wrapped;
+    }
+
+    tokenizeDescription(description) {
+        if (!description) {
+            return [];
+        }
+        return description
+            .toLowerCase()
+            .match(/[a-z0-9'-]+/g)
+            ?.map(token => token.trim())
+            .filter(token => token.length > 1)
+            || [];
+    }
+
+    countMatches(tokens, candidates) {
+        if (!Array.isArray(tokens) || !tokens.length || !Array.isArray(candidates) || !candidates.length) {
+            return 0;
+        }
+        const set = new Set(tokens);
+        return candidates.reduce((total, candidate) => total + (set.has(candidate) ? 1 : 0), 0);
+    }
+
+    mapParameterRange(param, factor) {
+        const range = this.parameterRanges[param];
+        if (!range) {
+            return factor;
+        }
+        const clamped = clamp(factor, 0, 1);
+        const value = range.min + (range.max - range.min) * clamped;
+        if (range.type === 'int') {
+            return Math.round(value);
+        }
+        return value;
+    }
+
+    rotationFromIntensity(param, intensity, seed, salt) {
+        const range = this.parameterRanges[param];
+        if (!range) {
+            return 0;
+        }
+        const maxMagnitude = Math.max(Math.abs(range.min), Math.abs(range.max));
+        const magnitude = clamp(intensity, 0, 1) * maxMagnitude;
+        const sign = this.pseudoRandom(seed, salt) >= 0.5 ? 1 : -1;
+        const value = magnitude * sign;
+        return clamp(value, range.min, range.max);
+    }
+
+    pseudoRandom(seed, salt = '') {
+        const input = `${seed || ''}|${salt}`;
+        let hash = 0;
+        for (let i = 0; i < input.length; i += 1) {
+            hash = (hash << 5) - hash + input.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash % 1000) / 999;
+    }
+
+    average(values) {
+        const valid = values
+            .map(value => (Number.isFinite(value) ? value : 0))
+            .filter(value => Number.isFinite(value));
+
+        if (!valid.length) {
+            return 0.5;
+        }
+
+        const sum = valid.reduce((acc, value) => acc + value, 0);
+        return clamp(sum / valid.length, 0, 1);
+    }
+
     validateParameters(params) {
         const validated = {};
-        
-        // Define parameter ranges
-        const ranges = {
-            geometry: { min: 0, max: 7, type: 'int' },
-            hue: { min: 0, max: 360, type: 'int' },
-            intensity: { min: 0, max: 1, type: 'float' },
-            saturation: { min: 0, max: 1, type: 'float' },
-            speed: { min: 0.1, max: 3, type: 'float' },
-            chaos: { min: 0, max: 1, type: 'float' },
-            morphFactor: { min: 0, max: 2, type: 'float' },
-            gridDensity: { min: 5, max: 100, type: 'int' },
-            rot4dXW: { min: -6.28, max: 6.28, type: 'float' },
-            rot4dYW: { min: -6.28, max: 6.28, type: 'float' },
-            rot4dZW: { min: -6.28, max: 6.28, type: 'float' }
-        };
-        
-        // Validate each parameter
-        Object.entries(ranges).forEach(([param, range]) => {
+
+        Object.entries(this.parameterRanges).forEach(([param, range]) => {
             if (params.hasOwnProperty(param)) {
                 let value = parseFloat(params[param]);
-                
-                // Clamp to range
-                value = Math.max(range.min, Math.min(range.max, value));
-                
-                // Convert to int if needed
+                if (!Number.isFinite(value)) return;
+                value = clamp(value, range.min, range.max);
                 if (range.type === 'int') {
                     value = Math.round(value);
                 }
-                
                 validated[param] = value;
             }
         });
-        
+
         return validated;
     }
 }
